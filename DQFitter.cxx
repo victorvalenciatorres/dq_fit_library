@@ -235,8 +235,8 @@ void DQFitter::SaveResults() {
     paveText->AddText(Form("%s = %4.3f #pm %4.3f", fFuncTot->GetParName(iPar), fFuncTot->GetParameter(iPar), fFuncTot->GetParError(iPar)));
   }
 
-  TCanvas *canvas = new TCanvas(Form("canvas_%s", fTrialName.Data()), Form("canvas_%s", fTrialName.Data()), 600, 600);
-  canvas->SetLeftMargin(0.15);
+  TCanvas *canvasFit = new TCanvas(Form("canvasFit_%s", fTrialName.Data()), Form("canvasFit_%s", fTrialName.Data()), 600, 600);
+  canvasFit->SetLeftMargin(0.15);
   fHist->Draw("EP");
   fFuncBkg->Draw("same");
   fFuncSig->Draw("same");
@@ -255,9 +255,9 @@ void DQFitter::SaveResults() {
 
   // Save fHistResults and canvas into the output file
   trialDir->cd();
-  canvas->Write();
+  canvasFit->Write();
   canvasRatio->Write();
   fHistResults->Write();
-  delete canvas;
+  delete canvasFit;
   delete canvasRatio;
 }
