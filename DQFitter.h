@@ -11,6 +11,15 @@
 #include <string>
 #include <vector>
 
+// RooFit includes
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooWorkspace.h"
+#include "RooAddPdf.h"
+#include "RooExtendPdf.h"
+#include "RooPlot.h"
+
+using namespace RooFit;
 using namespace std;
 
 class DQFitter : public TObject
@@ -36,10 +45,13 @@ public:
   void CloseOutputFile();
   void SetHistogram(TH1F* hist);
   void SetFunction(FitFunctionsList func);
+  void SetPDF(FitFunctionsList func);
   void InitParameters(Int_t nParams, Double_t *params, TString *fixParams, TString *nameParams);
+  void InitRooParameters(Int_t nParams, RooRealVar *rooParameters[]);
   void SetFitRange(Double_t minFitRange, Double_t maxFitRange);
   void SetFitMethod(TString fitMethod);
-  void FitInvMassSpectrum(TString trialName);
+  void BinnedFitInvMassSpectrum(TString trialName);
+  void UnbinnedFitInvMassSpectrum(TString trialName);
 
 protected:
   void SaveResults();
@@ -74,6 +86,11 @@ private:
   Double_t fErrorChiSquareNDF;
   Double_t fSignal;
   Double_t fErrorSignal;
+
+  // RooFit variables
+  RooRealVar   fRooMass;
+  RooWorkspace fRooWorkspace;
+  RooRealVar*  fRooParameters[100];
 
 ClassDef(DQFitter,1)
 };

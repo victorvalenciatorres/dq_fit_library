@@ -37,6 +37,15 @@
 #include <TStopwatch.h>
 #include <TList.h>
 
+// RooFit includes
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooWorkspace.h"
+#include "RooAddPdf.h"
+#include "RooExtendPdf.h"
+#include "RooPlot.h"
+using namespace RooFit;
+
 // my includes
 #include "DQFitter.h"
 #endif
@@ -65,12 +74,12 @@ void test_fit(){
   DQFitter dq_fitter("AnalysisResults.root");
   // Set the histogram to fit
   dq_fitter.SetHistogram(hist);
+
   // Set the fitting function
   dq_fitter.SetFunction(DQFitter::kFuncExpGaus);
   // Inizialize the fitting paramters
   dq_fitter.InitParameters(5, parameters, fixParameters, nameParameters);
-
-
+  /*
   Double_t minFitRange[] = {0.1, 0.3, 0.5};
   Double_t maxFitRange[] = {4.9, 4.7, 4.5};
   for (int i = 0;i < 3;i++) {
@@ -79,9 +88,24 @@ void test_fit(){
     // Set the fit method
     dq_fitter.SetFitMethod("S0");
     // Fit the spectrum
-    dq_fitter.FitInvMassSpectrum(Form("trial_%i", i));
+    dq_fitter.BinnedFitInvMassSpectrum(Form("trial_%i", i));
   }
   // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
+  */
+
+  // Test with RooFit
+  RooRealVar *rooParameters[4];
+  rooParameters[0] = new RooRealVar("mean", "mean", 3, 2, 4);
+  rooParameters[1] = new RooRealVar("width", "width", 0.1, 0, 0.2);
+  rooParameters[2] = new RooRealVar("a", "a", 0.1, 0., 0.2);
+  rooParameters[3] = new RooRealVar("b", "b", 2, -10, 10);
+
+  // Inizialize the fitting paramters for RooFit
+  dq_fitter.InitRooParameters(4, rooParameters);
+  // Set the PDF for RooFit
+  dq_fitter.SetPDF(DQFitter::kFuncExpGaus);
+  // Fit the spectrum
+  dq_fitter.UnbinnedFitInvMassSpectrum("trialUnbinned");
 
 }

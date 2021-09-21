@@ -35,6 +35,16 @@
 #include <TKey.h>
 #include <TGaxis.h>
 
+// RooFit includes
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooWorkspace.h"
+#include "RooAddPdf.h"
+#include "RooExtendPdf.h"
+#include "RooPlot.h"
+#include "RooDataHist.h"
+using namespace RooFit;
+
 // My includes
 #include "FunctionLibrary.C"
 #include "DQFitter.h"
@@ -152,7 +162,7 @@ void DQFitter::InitParameters(Int_t nParams, Double_t *params, TString *fixParam
   }
 }
 //______________________________________________________________________________
-void DQFitter::FitInvMassSpectrum(TString trialName) {
+void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
   fTrialName = trialName;
 
   // Fit the histogram
@@ -260,4 +270,71 @@ void DQFitter::SaveResults() {
   fHistResults->Write();
   delete canvasFit;
   delete canvasRatio;
+}
+//______________________________________________________________________________
+void DQFitter::SetPDF(FitFunctionsList func) {
+  gROOT->ProcessLineSync(".x GausPdf.cxx+");
+  gROOT->ProcessLineSync(".x ExpPdf.cxx+");
+
+  fRooMass = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 0, 5);
+  switch (func) {
+    case kFuncPol0 :
+      break;
+    case kFuncExp :
+      break;
+    case kFuncGaus :
+      break;
+    case kFuncPol0Gaus :
+      break;
+    case kFuncExpGaus :
+      fRooWorkspace.factory("GausPdf::myGaus(m[0,5], mean[3,2,4], width[0.1,0,0.2])");
+      fRooWorkspace.factory("ExpPdf::myExp(m[0,5], a[1,0.7,1.3], b[0.5,-10,10])");
+      fRooWorkspace.factory("SUM::sum(nsig[10000,5000,20000]*myGaus,nbkg[100000,50000,200000]*myExp)");
+      break;
+    case kNFunctions :
+      break;
+  }
+}
+//______________________________________________________________________________
+void DQFitter::InitRooParameters(Int_t nParams, RooRealVar *rooParameters[]) {
+  fNParams = nParams;
+  for (int iPar = 0;iPar < fNParams;iPar++) {
+    fRooParameters[iPar] = rooParameters[iPar];
+  }
+}
+//______________________________________________________________________________
+void DQFitter::UnbinnedFitInvMassSpectrum(TString trialName) {
+  fTrialName = trialName;
+  fRooWorkspace.Print();
+  auto pdf = fRooWorkspace.pdf("sum");
+
+  // Generate toy data from pdf and plot data and pdf on frame
+  RooPlot *frame1 = fRooMass.frame(Title("Fit Example"));
+
+  /*
+  RooDataSet *data = pdf->generate(fRooMass, 1000);
+  pdf->fitTo(*data);
+  data->plotOn(frame1);
+  pdf->plotOn(frame1);
+
+  TCanvas *c = new TCanvas("rf104_classfactory", "rf104_classfactory", 800, 400);
+  c->cd(1);
+  gPad->SetLeftMargin(0.15);
+  frame1->GetYaxis()->SetTitleOffset(1.4);
+  frame1->Draw();
+  */
+
+
+
+  RooDataHist data("data","data",fRooMass,Import(*fHist)) ;
+  pdf->fitTo(data);
+  data.plotOn(frame1);
+  pdf->plotOn(frame1);
+  pdf->paramOn(frame1, Layout(0.55));
+
+  TCanvas *canvasFit = new TCanvas(Form("canvasFit_%s", fTrialName.Data()), Form("canvasFit_%s", fTrialName.Data()), 600, 600);
+  canvasFit->SetLeftMargin(0.15);
+  gPad->SetLeftMargin(0.15);
+  frame1->GetYaxis()->SetTitleOffset(1.4);
+  frame1->Draw();
 }
