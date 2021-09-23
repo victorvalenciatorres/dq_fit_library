@@ -55,8 +55,12 @@ public:
 
 protected:
   void SaveResults();
+  void BookHistograms();
 
 private:
+  // Configurations
+  Bool_t   fDoRooFit;
+
   // Files
   TFile*   fFile;
   TString  fPathToFile;
@@ -91,6 +95,8 @@ private:
   RooRealVar   fRooMass;
   RooWorkspace fRooWorkspace;
   RooRealVar*  fRooParameters[100];
+  RooPlot*     fRooPlot;
+
 
 ClassDef(DQFitter,1)
 };

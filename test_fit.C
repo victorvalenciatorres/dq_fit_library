@@ -95,17 +95,21 @@ void test_fit(){
   */
 
   // Test with RooFit
-  RooRealVar *rooParameters[4];
+  RooRealVar *rooParameters[6];
   rooParameters[0] = new RooRealVar("mean", "mean", 3, 2, 4);
   rooParameters[1] = new RooRealVar("width", "width", 0.1, 0, 0.2);
   rooParameters[2] = new RooRealVar("a", "a", 0.1, 0., 0.2);
   rooParameters[3] = new RooRealVar("b", "b", 2, -10, 10);
+  rooParameters[4] = new RooRealVar("nbkg", "nbkg", 100000,50000,200000);
+  rooParameters[5] = new RooRealVar("nsig", "nsig", 10000, 5000, 20000);
 
   // Inizialize the fitting paramters for RooFit
-  dq_fitter.InitRooParameters(4, rooParameters);
+  dq_fitter.InitRooParameters(6, rooParameters);
   // Set the PDF for RooFit
   dq_fitter.SetPDF(DQFitter::kFuncExpGaus);
   // Fit the spectrum
   dq_fitter.UnbinnedFitInvMassSpectrum("trialUnbinned");
+  // close the output file when all trials are finished
+  dq_fitter.CloseOutputFile();
 
 }
