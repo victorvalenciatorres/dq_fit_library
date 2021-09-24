@@ -42,6 +42,7 @@
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
 #include "RooPlot.h"
+#include "RooHist.h"
 #include "RooDataHist.h"
 using namespace RooFit;
 
@@ -139,31 +140,34 @@ void DQFitter::SetFitMethod(TString fitMethod) {
   fFitMethod = fitMethod;
 }
 //______________________________________________________________________________
-void DQFitter::InitParameters(Int_t nParams, Double_t *params, TString *fixParams, TString *nameParams) {
+void DQFitter::InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams) {
   fNParams = nParams;
-
-  for (int iPar = 0;iPar < fNParams;iPar++) {
-    if (fixParams[iPar] == "free") {
-      fFuncTot->SetParameter(iPar, params[iPar]);
-    } else {
-      fFuncTot->FixParameter(iPar, params[iPar]);
-    }
-    if (!nameParams) {
-      fFuncTot->SetParName(iPar, Form("p%i", iPar));
-    } else {
-      fFuncTot->SetParName(iPar, nameParams[iPar].Data());
-    }
-  }
-
-  // Init the histogram with the fit results
-  BookHistograms();
-  for (int iPar = 2;iPar < fNParams+2;iPar++) {
-    fHistResults->GetXaxis()->SetBinLabel(iPar+1, fFuncTot->GetParName(iPar-2));
-  }
+  fParams = params;
+  fMinParamLimits = minParamLimits;
+  fMaxParamLimits = maxParamLimits;
+  fParamNames = nameParams;
 }
 //______________________________________________________________________________
 void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
   fTrialName = trialName;
+
+  // Set/Fix the function parameters
+  for (int iPar = 0;iPar < fNParams;iPar++) {
+    fFuncTot->SetParName(iPar, fParamNames[iPar].Data());
+    if (fMinParamLimits[iPar] == fMaxParamLimits[iPar]) {
+      fFuncTot->FixParameter(iPar, fParams[iPar]);
+    } else {
+      fFuncTot->SetParameter(iPar, fParams[iPar]);
+    }
+  }
+
+  // Init the histogram with the fit results
+  fHistResults = new TH1F("histResults", "", fNParams+2, 0., fNParams+2);
+  fHistResults->GetXaxis()->SetBinLabel(1, "#chi^{2} / NDF");
+  fHistResults->GetXaxis()->SetBinLabel(2, "Signal");
+  for (int iPar = 2;iPar < fNParams+2;iPar++) {
+    fHistResults->GetXaxis()->SetBinLabel(iPar+1, fFuncTot->GetParName(iPar-2));
+  }
 
   // Fit the histogram
   TFitResultPtr ptrFit;
@@ -214,7 +218,13 @@ void DQFitter::SaveResults() {
     fRooPlot->GetYaxis()->SetTitleOffset(1.4);
     fRooPlot->Draw();
 
+    RooHist* rooHistRatio = fRooPlot->residHist();
+    RooPlot* rooPlotRatio = fRooMass.frame(Title("Residual Distribution")) ;
+    rooPlotRatio->addPlotable(rooHistRatio,"P") ;
     canvasRatio = new TCanvas(Form("canvasRatio_%s", fTrialName.Data()), Form("canvasRatio_%s", fTrialName.Data()), 600, 600);
+    canvasRatio->SetLeftMargin(0.15);
+    rooPlotRatio->GetYaxis()->SetTitleOffset(1.4);
+    rooPlotRatio->Draw();
   } else {
     gStyle->SetOptStat(0);
 
@@ -296,35 +306,28 @@ void DQFitter::SetPDF(FitFunctionsList func) {
     case kFuncExpGaus :
       gROOT->ProcessLineSync(".x GausPdf.cxx+");
       gROOT->ProcessLineSync(".x ExpPdf.cxx+");
-      fRooWorkspace.factory("GausPdf::myGaus(m[0,5], mean[3,2,4], width[0.1,0,0.2])");
-      fRooWorkspace.factory("ExpPdf::myExp(m[0,5], a[1,0.7,1.3], b[0.5,-10,10])");
-      fRooWorkspace.factory("SUM::sum(nsig[10000,5000,20000]*myGaus,nbkg[100000,50000,200000]*myExp)");
+      fRooWorkspace.factory(Form("GausPdf::myGaus(m[0,5], mean[%f,%f,%f], width[%f,%f,%f])",fParams[0],fMinParamLimits[0],fMaxParamLimits[0],fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
+      fRooWorkspace.factory(Form("ExpPdf::myExp(m[0,5], a[%f,%f,%f], b[%f,%f,%f])",fParams[2],fMinParamLimits[2],fMaxParamLimits[2],fParams[3],fMinParamLimits[3],fMaxParamLimits[3]));
+      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myExp)",fParams[4],fMinParamLimits[4],fMaxParamLimits[4],fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
       break;
     case kNFunctions :
       break;
   }
 }
 //______________________________________________________________________________
-void DQFitter::InitRooParameters(Int_t nParams, RooRealVar *rooParameters[]) {
-  fNParams = nParams;
-  for (int iPar = 0;iPar < fNParams;iPar++) {
-    fRooParameters[iPar] = rooParameters[iPar];
-  }
-
-  // Init the histogram with the fit results
-  for (int iPar = 0;iPar < fNParams;iPar++) {
-    fHistResults->GetXaxis()->SetBinLabel(iPar+1, fRooParameters[iPar]->getTitle());
-  }
-}
-//______________________________________________________________________________
 void DQFitter::UnbinnedFitInvMassSpectrum(TString trialName) {
   fDoRooFit = kTRUE;
   fTrialName = trialName;
+
+  // Init the histogram with the fit results
+  fHistResults = new TH1F("histResults", "", fNParams, 0., fNParams);
+  for (int iPar = 0;iPar < fNParams;iPar++) {
+    fHistResults->GetXaxis()->SetBinLabel(iPar+1, fParamNames[iPar]);
+  }
+
+  // Retrieving objects from workspace
   fRooWorkspace.Print();
   auto pdf = fRooWorkspace.pdf("sum");
-
-  //RooArgSet* params = (RooArgSet*) pdf->getParameters(fRooMass);
-  //params->Print();
 
   fRooPlot = fRooMass.frame(Title(Form("canvasFit_%s", fTrialName.Data())));
   RooDataHist rooHist("data","data",fRooMass,Import(*fHist));
@@ -337,19 +340,12 @@ void DQFitter::UnbinnedFitInvMassSpectrum(TString trialName) {
 
   // User entries of the results histogram
   for (int iPar = 0;iPar < fNParams;iPar++) {
-    fHistResults->SetBinContent(iPar+1, fRooWorkspace.var(fRooParameters[iPar]->getTitle())->getVal());
-    fHistResults->SetBinError(iPar+1, fRooWorkspace.var(fRooParameters[iPar]->getTitle())->getError());
+    fHistResults->SetBinContent(iPar+1, fRooWorkspace.var(fParamNames[iPar])->getVal());
+    fHistResults->SetBinError(iPar+1, fRooWorkspace.var(fParamNames[iPar])->getError());
   }
   if (!fFile) {
     printf("\n************ WARNING: no output file! ************\n");
   } else {
     SaveResults();
   }
-}
-//______________________________________________________________________________
-void DQFitter::BookHistograms() {
-  // Init the histogram with the fit results
-  fHistResults = new TH1F("histResults", "", fNParams+2, 0., fNParams+2);
-  fHistResults->GetXaxis()->SetBinLabel(1, "#chi^{2} / NDF");
-  fHistResults->GetXaxis()->SetBinLabel(2, "Signal");
 }

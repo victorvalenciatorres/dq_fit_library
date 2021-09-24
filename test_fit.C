@@ -44,6 +44,7 @@
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
 #include "RooPlot.h"
+#include "RooHist.h"
 using namespace RooFit;
 
 // my includes
@@ -66,9 +67,15 @@ void test_fit(){
   hist->FillRandom("funcSig", 10000);
 
   // Class parameter settings
-  Double_t     parameters[] = {100.,   -0.1,   1000.,  3.,     0.2};            // Init values of the parameters
-  TString   fixParameters[] = {"free", "free", "free", "free", "free"};         // List of fixed / free parameters
-  TString  nameParameters[] = {"p0",   "p1",   "p2",   "mean", "width"};        // Name parameters
+  //Double_t     parameters[] = {100.,   -0.1,   1000.,  3.,     0.2};            // Init values of the parameters
+  //TString   fixParameters[] = {"free", "free", "free", "free", "free"};         // List of fixed / free parameters
+  //TString  nameParameters[] = {"p0",   "p1",   "p2",   "mean", "width"};        // Name parameters
+
+  // Test with standard root fit
+  Double_t    paramValues[] = {100.,   -0.1,   1000.,  3.,     0.2};
+  Double_t minParamLimits[] = {0,      -0.2,   0,      2.,     0.};
+  Double_t maxParamLimits[] = {200,     0.4,   2000,   4.,     0.4};
+  TString  nameParameters[] = {"p0",   "p1",   "p2",   "mean", "width"};
 
   // Create a DQFitter object and open the file where results will be saved
   DQFitter dq_fitter("AnalysisResults.root");
@@ -78,8 +85,8 @@ void test_fit(){
   // Set the fitting function
   dq_fitter.SetFunction(DQFitter::kFuncExpGaus);
   // Inizialize the fitting paramters
-  dq_fitter.InitParameters(5, parameters, fixParameters, nameParameters);
-  /*
+  dq_fitter.InitParameters(5, paramValues, minParamLimits, maxParamLimits, nameParameters);
+
   Double_t minFitRange[] = {0.1, 0.3, 0.5};
   Double_t maxFitRange[] = {4.9, 4.7, 4.5};
   for (int i = 0;i < 3;i++) {
@@ -90,26 +97,21 @@ void test_fit(){
     // Fit the spectrum
     dq_fitter.BinnedFitInvMassSpectrum(Form("trial_%i", i));
   }
-  // close the output file when all trials are finished
-  dq_fitter.CloseOutputFile();
-  */
 
   // Test with RooFit
-  RooRealVar *rooParameters[6];
-  rooParameters[0] = new RooRealVar("mean", "mean", 3, 2, 4);
-  rooParameters[1] = new RooRealVar("width", "width", 0.1, 0, 0.2);
-  rooParameters[2] = new RooRealVar("a", "a", 0.1, 0., 0.2);
-  rooParameters[3] = new RooRealVar("b", "b", 2, -10, 10);
-  rooParameters[4] = new RooRealVar("nbkg", "nbkg", 100000,50000,200000);
-  rooParameters[5] = new RooRealVar("nsig", "nsig", 10000, 5000, 20000);
+  Double_t    rooParamValues[] = {3,      0.1,     0.1, 2,   5000,   50000};
+  Double_t rooMinParamLimits[] = {2,      0,       0,   -10, 5000,   50000};
+  Double_t rooMaxParamLimits[] = {4,      0.2,     0.2,  10, 20000,  200000};
+  TString  rooNameParameters[] = {"mean", "width", "a", "b", "nsig", "nbkg"};
 
   // Inizialize the fitting paramters for RooFit
-  dq_fitter.InitRooParameters(6, rooParameters);
+  dq_fitter.InitParameters(6, rooParamValues, rooMinParamLimits, rooMaxParamLimits, rooNameParameters);
   // Set the PDF for RooFit
   dq_fitter.SetPDF(DQFitter::kFuncExpGaus);
   // Fit the spectrum
   dq_fitter.UnbinnedFitInvMassSpectrum("trialUnbinned");
   // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
-
+  // close the output file when all trials are finished
+  dq_fitter.CloseOutputFile();
 }

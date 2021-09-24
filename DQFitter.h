@@ -46,8 +46,7 @@ public:
   void SetHistogram(TH1F* hist);
   void SetFunction(FitFunctionsList func);
   void SetPDF(FitFunctionsList func);
-  void InitParameters(Int_t nParams, Double_t *params, TString *fixParams, TString *nameParams);
-  void InitRooParameters(Int_t nParams, RooRealVar *rooParameters[]);
+  void InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams);
   void SetFitRange(Double_t minFitRange, Double_t maxFitRange);
   void SetFitMethod(TString fitMethod);
   void BinnedFitInvMassSpectrum(TString trialName);
@@ -55,7 +54,6 @@ public:
 
 protected:
   void SaveResults();
-  void BookHistograms();
 
 private:
   // Configurations
@@ -80,16 +78,20 @@ private:
   Int_t    fMaxFitIterations;
 
   // Fit parameters
-  TString  fTrialName;
-  Int_t    fNParams;
-  Double_t fMinFitRange;
-  Double_t fMaxFitRange;
-  TString  fFitMethod;
+  TString   fTrialName;
+  Int_t     fNParams;
+  Double_t* fParams;
+  Double_t* fMinParamLimits;
+  Double_t* fMaxParamLimits;
+  TString*  fParamNames;
+  Double_t  fMinFitRange;
+  Double_t  fMaxFitRange;
+  TString   fFitMethod;
 
-  Double_t fChiSquareNDF;
-  Double_t fErrorChiSquareNDF;
-  Double_t fSignal;
-  Double_t fErrorSignal;
+  Double_t  fChiSquareNDF;
+  Double_t  fErrorChiSquareNDF;
+  Double_t  fSignal;
+  Double_t  fErrorSignal;
 
   // RooFit variables
   RooRealVar   fRooMass;
