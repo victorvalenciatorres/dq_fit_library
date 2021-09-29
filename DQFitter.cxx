@@ -304,8 +304,8 @@ void DQFitter::SetPDF(FitFunctionsList func) {
     case kFuncPol0Gaus :
       break;
     case kFuncExpGaus :
-      gROOT->ProcessLineSync(".x GausPdf.cxx+");
-      gROOT->ProcessLineSync(".x ExpPdf.cxx+");
+      gROOT->ProcessLineSync(".x RooFit_Library/GausPdf.cxx+");
+      gROOT->ProcessLineSync(".x RooFit_Library/ExpPdf.cxx+");
       fRooWorkspace.factory(Form("GausPdf::myGaus(m[0,5], mean[%f,%f,%f], width[%f,%f,%f])",fParams[0],fMinParamLimits[0],fMaxParamLimits[0],fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
       fRooWorkspace.factory(Form("ExpPdf::myExp(m[0,5], a[%f,%f,%f], b[%f,%f,%f])",fParams[2],fMinParamLimits[2],fMaxParamLimits[2],fParams[3],fMinParamLimits[3],fMaxParamLimits[3]));
       fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myExp)",fParams[4],fMinParamLimits[4],fMaxParamLimits[4],fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
