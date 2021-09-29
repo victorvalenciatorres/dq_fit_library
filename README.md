@@ -16,4 +16,5 @@ An AnalysisResults.root file will be produced containing:
 * the canvas with the ratio Data / Fit
 * the histogram with the X2 / NDF, the number of signal events and the parameters of interest (POI)
 
-The class can use also the RooFit library. In this case the used has to create a class following the example of 
+The class can use also the RooFit library. In this case the used has to create a class following the example of GausPdf.cxx.
+At this point the PDF can be added to the class and used for the fit.
