@@ -14,4 +14,6 @@ In the root environment run with:
 An AnalysisResults.root file will be produced containing:
 * the canvas fit the histogram and the fitting functions
 * the canvas with the ratio Data / Fit
-* the histogram with the X2 / NDF, the number of signal events and the parameters of interest (POI) chosen by the user
+* the histogram with the X2 / NDF, the number of signal events and the parameters of interest (POI)
+
+The class can use also the RooFit library. In this case the used has to create a class following the example of 
