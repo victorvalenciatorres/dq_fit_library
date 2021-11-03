@@ -32,14 +32,16 @@ public:
 
   enum FitFunctionsList {
     kFuncExp,
-    kFuncPol0,
+    kFuncPol1,
+    kFuncPol4Exp,
     kFuncGaus,
-    kFuncPol0Gaus,
+    kFuncPol1Gaus,
     kFuncExpGaus,
+    kFuncPol4ExpGaus,
     kNFunctions
   };
 
-  const Int_t nParameters[kNFunctions] = {2, 2, 3, 5, 5};
+  const Int_t nParameters[kNFunctions] = {2, 2, 7, 3, 5, 5, 10};
 
   void OpenOutputFile(TString pathToFile);
   void CloseOutputFile();

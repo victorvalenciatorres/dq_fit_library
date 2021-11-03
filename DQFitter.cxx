@@ -103,19 +103,22 @@ void DQFitter::SetHistogram(TH1F *hist) {
 //______________________________________________________________________________
 void DQFitter::SetFunction(FitFunctionsList func) {
   switch (func) {
-    case kFuncPol0 :
-      fFuncTot = new TF1("funcPol0", FuncPol0, -100., 100., nParameters[kFuncPol0]);
+    case kFuncPol1 :
+      fFuncTot = new TF1("funcPol1", FuncPol1, -100., 100., nParameters[kFuncPol1]);
       break;
     case kFuncExp :
       fFuncTot = new TF1("funcExp", FuncExp, -100., 100., nParameters[kFuncExp]);
       break;
+    case kFuncPol4Exp :
+      fFuncTot = new TF1("funcPol4Exp", FuncPol4Exp, -100., 100., nParameters[kFuncPol4Exp]);
+      break;
     case kFuncGaus :
       fFuncTot = new TF1("funcGaus", FuncGaus, -100., 100., nParameters[kFuncGaus]);
       break;
-    case kFuncPol0Gaus :
-      fFuncTot = new TF1("funcPol0Gaus", FuncPol0Gaus, -100., 100., nParameters[kFuncPol0Gaus]);
-      fFuncBkg = new TF1("funcPol0",     FuncPol0,     -100., 100., nParameters[kFuncPol0]);
-      fNParBkg = nParameters[kFuncPol0];
+    case kFuncPol1Gaus :
+      fFuncTot = new TF1("funcPol1Gaus", FuncPol1Gaus, -100., 100., nParameters[kFuncPol1Gaus]);
+      fFuncBkg = new TF1("funcPol1",     FuncPol1,     -100., 100., nParameters[kFuncPol1]);
+      fNParBkg = nParameters[kFuncPol1];
       fFuncSig = new TF1("funcGaus",     FuncGaus,     -100., 100., nParameters[kFuncGaus]);
       fNParSig = nParameters[kFuncGaus];
       break;
@@ -123,6 +126,13 @@ void DQFitter::SetFunction(FitFunctionsList func) {
       fFuncTot = new TF1("funcExpGaus", FuncExpGaus, -100., 100., nParameters[kFuncExpGaus]);
       fFuncBkg = new TF1("funcExp",     FuncExp,     -100., 100., nParameters[kFuncExp]);
       fNParBkg = nParameters[kFuncExp];
+      fFuncSig = new TF1("funcGaus",    FuncGaus,    -100., 100., nParameters[kFuncGaus]);
+      fNParSig = nParameters[kFuncGaus];
+      break;
+    case kFuncPol4ExpGaus :
+      fFuncTot = new TF1("funcPol4ExpGaus", FuncPol4ExpGaus, -100., 100., nParameters[kFuncPol4ExpGaus]);
+      fFuncBkg = new TF1("funcPol4Exp",     FuncPol4Exp,     -100., 100., nParameters[kFuncPol4Exp]);
+      fNParBkg = nParameters[kFuncPol4Exp];
       fFuncSig = new TF1("funcGaus",    FuncGaus,    -100., 100., nParameters[kFuncGaus]);
       fNParSig = nParameters[kFuncGaus];
       break;
@@ -169,7 +179,23 @@ void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
     fHistResults->GetXaxis()->SetBinLabel(iPar+1, fFuncTot->GetParName(iPar-2));
   }
 
-  // Fit the histogram
+  // Fit the background
+  TH1F *histBkg = (TH1F*) fHist -> Clone("histBkg");
+  Int_t fistBin = histBkg -> FindBin(2.8);
+  Int_t lastBin = histBkg -> FindBin(3.8);
+  for(int iBin = fistBin;iBin < lastBin;iBin++){
+    histBkg -> SetBinContent(iBin,0);
+    histBkg -> SetBinError(iBin,0);
+  }
+
+  fFuncBkg -> SetParameters(1.,1.,1.,1.,1.,1.,1000.);
+  TFitResultPtr ptrFitBkg;
+  ptrFitBkg = (TFitResultPtr) histBkg->Fit(fFuncBkg, fFitMethod, "", fMinFitRange, fMaxFitRange);
+  for (Int_t iParBkg = 0;iParBkg < fNParBkg;iParBkg++) {
+    fFuncTot->SetParameter(iParBkg, fFuncBkg->GetParameter(iParBkg));
+  }
+
+  // Fit the histogram signal + background
   TFitResultPtr ptrFit;
   ptrFit = (TFitResultPtr) fHist->Fit(fFuncTot, fFitMethod, "", fMinFitRange, fMaxFitRange);
   TMatrixDSym covSig  = ptrFit->GetCovarianceMatrix().GetSub(fNParBkg, fNParBkg+fNParSig-1, fNParBkg, fNParBkg+fNParSig-1);
@@ -295,13 +321,13 @@ void DQFitter::SaveResults() {
 void DQFitter::SetPDF(FitFunctionsList func) {
   fRooMass = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 0, 5);
   switch (func) {
-    case kFuncPol0 :
+    case kFuncPol1 :
       break;
     case kFuncExp :
       break;
     case kFuncGaus :
       break;
-    case kFuncPol0Gaus :
+    case kFuncPol1Gaus :
       break;
     case kFuncExpGaus :
       gROOT->ProcessLineSync(".x RooFit_Library/GausPdf.cxx+");
