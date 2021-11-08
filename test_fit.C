@@ -78,7 +78,7 @@ void test_fit(){
   TString  nameParameters[] = {"p0",   "p1",   "p2",   "mean", "width"};
 
   // Create a DQFitter object and open the file where results will be saved
-  DQFitter dq_fitter("AnalysisResults.root");
+  DQFitter dq_fitter("test_files/FitResults.root");
   // Set the histogram to fit
   dq_fitter.SetHistogram(hist);
 
@@ -110,8 +110,6 @@ void test_fit(){
   dq_fitter.SetPDF(DQFitter::kFuncExpGaus);
   // Fit the spectrum
   dq_fitter.UnbinnedFitInvMassSpectrum("trialUnbinned");
-  // close the output file when all trials are finished
-  dq_fitter.CloseOutputFile();
   // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
 }

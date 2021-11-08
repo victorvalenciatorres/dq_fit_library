@@ -47,7 +47,7 @@
 using namespace RooFit;
 
 // My includes
-#include "FunctionLibrary.C"
+#include "Fit_Library/FunctionLibrary.C"
 #include "DQFitter.h"
 
 ClassImp(DQFitter)
@@ -56,7 +56,7 @@ ClassImp(DQFitter)
 DQFitter::DQFitter(): TObject() {
   // default constructor
   fDoRooFit         = kFALSE;
-  fPathToFile       = "AnalysisResults.root";
+  fPathToFile       = "FitResults.root";
   fNParBkg          = 2;
   fNParSig          = 3;
   fMaxFitIterations = 100;
@@ -319,22 +319,47 @@ void DQFitter::SaveResults() {
 }
 //______________________________________________________________________________
 void DQFitter::SetPDF(FitFunctionsList func) {
-  fRooMass = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 0, 5);
+  fRooMass = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5);
   switch (func) {
     case kFuncPol1 :
       break;
     case kFuncExp :
+      break;
+    case kFuncPol4Exp :
       break;
     case kFuncGaus :
       break;
     case kFuncPol1Gaus :
       break;
     case kFuncExpGaus :
-      gROOT->ProcessLineSync(".x RooFit_Library/GausPdf.cxx+");
-      gROOT->ProcessLineSync(".x RooFit_Library/ExpPdf.cxx+");
-      fRooWorkspace.factory(Form("GausPdf::myGaus(m[0,5], mean[%f,%f,%f], width[%f,%f,%f])",fParams[0],fMinParamLimits[0],fMaxParamLimits[0],fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
-      fRooWorkspace.factory(Form("ExpPdf::myExp(m[0,5], a[%f,%f,%f], b[%f,%f,%f])",fParams[2],fMinParamLimits[2],fMaxParamLimits[2],fParams[3],fMinParamLimits[3],fMaxParamLimits[3]));
-      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myExp)",fParams[4],fMinParamLimits[4],fMaxParamLimits[4],fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
+      gROOT->ProcessLineSync(".x Fit_Library/GausPdf.cxx+");
+      gROOT->ProcessLineSync(".x Fit_Library/ExpPdf.cxx+");
+      fRooWorkspace.factory(Form("GausPdf::myGaus(m[2,5], mean[%f,%f,%f], width[%f,%f,%f])",
+      fParams[0],fMinParamLimits[0],fMaxParamLimits[0],
+      fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
+      fRooWorkspace.factory(Form("ExpPdf::myExp(m[2,5], a[%f,%f,%f], b[%f,%f,%f])",
+      fParams[2],fMinParamLimits[2],fMaxParamLimits[2],
+      fParams[3],fMinParamLimits[3],fMaxParamLimits[3]));
+      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myExp)",
+      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
+      fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
+      break;
+    case kFuncPol4ExpGaus :
+      gROOT->ProcessLineSync(".x Fit_Library/GausPdf.cxx+");
+      gROOT->ProcessLineSync(".x Fit_Library/Pol4ExpPdf.cxx+");
+      fRooWorkspace.factory(Form("GausPdf::myGaus(m[2,5], mean[%f,%f,%f], width[%f,%f,%f])",
+      fParams[0],fMinParamLimits[0],fMaxParamLimits[0],
+      fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
+      fRooWorkspace.factory(Form("Pol4ExpPdf::myPol4Exp(m[2,5], p0[%f,%f,%f], p1[%f,%f,%f], p2[%f,%f,%f], p3[%f,%f,%f], p4[%f,%f,%f], p5[%f,%f,%f])",
+      fParams[2],fMinParamLimits[2],fMaxParamLimits[2],
+      fParams[3],fMinParamLimits[3],fMaxParamLimits[3],
+      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
+      fParams[5],fMinParamLimits[5],fMaxParamLimits[5],
+      fParams[6],fMinParamLimits[6],fMaxParamLimits[6],
+      fParams[7],fMinParamLimits[7],fMaxParamLimits[7]));
+      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myPol4Exp)",
+      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
+      fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
       break;
     case kNFunctions :
       break;

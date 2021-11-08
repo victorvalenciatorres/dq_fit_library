@@ -18,7 +18,7 @@ void LoadStyle();
 
 using namespace std;
 
-void process_qc(const char *file_name = "reader.root"){
+void process_qc(const char *file_name = "test_files/reader.root"){
   TFile *file = new TFile(file_name, "read");
   auto hlist = (THashList*) file -> Get("d-q-table-reader/output");
   auto list = (TList*) hlist -> FindObject("PairsMuonSEPM");
@@ -45,10 +45,10 @@ void process_qc(const char *file_name = "reader.root"){
   TString  nameParameters[] = {"p0","p1","p2","p3","p4","p5","N_bkg","N_sig","mean","width"};
 
   // Create a DQFitter object and open the file where results will be saved
-  DQFitter dq_fitter("first_test.root");
+  DQFitter dq_fitter("test_files/qc_test.root");
 
 
-  for(int iPt = 0;iPt < 20;iPt++){
+  for(int iPt = 10;iPt < 14;iPt++){
     // Set the histogram to fit
     dq_fitter.SetHistogram(histMass[iPt]);
 
@@ -68,10 +68,28 @@ void process_qc(const char *file_name = "reader.root"){
       dq_fitter.BinnedFitInvMassSpectrum(Form("Pt_%i_trial_%i", iPt, i));
     }
   }
+
+  // Test with RooFit
+  Double_t    rooParamValues[] = {3.1,0.07,9.86843e+01,-1.36136e+02,1.02017e+02,3.47559e-01,9.94951e-01,1.51834e+00,5000,50000};
+  Double_t rooMinParamLimits[] = {2.9,0.1,-100.,-100.,-100.,-100.,-100.,-100.,5000,50000};
+  Double_t rooMaxParamLimits[] = {3.2,0.05,100., 100., 100., 500., 100., 100.,20000,200000};
+  TString  rooNameParameters[] = {"mean","width","p0","p1","p2","p3","p4","p5","nsig","nbkg"};
+
+  for(int iPt = 10;iPt < 14;iPt++){
+    // Set the histogram to fit
+    dq_fitter.SetHistogram(histMass[iPt]);
+    // Inizialize the fitting paramters for RooFit
+    dq_fitter.InitParameters(10, rooParamValues, rooMinParamLimits, rooMaxParamLimits, rooNameParameters);
+    // Set the PDF for RooFit
+    dq_fitter.SetPDF(DQFitter::kFuncPol4ExpGaus);
+    // Fit the spectrum
+    dq_fitter.UnbinnedFitInvMassSpectrum(Form("Pt_%i_trialUnbinned", iPt));
+  }
+  // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
 }
 //------------------------------------------------------------------------------
-void process_output(const char *file_name = "first_test.root"){
+void process_output(const char *file_name = "test_files/qc_test.root"){
   gStyle -> SetOptStat(0);
   LoadStyle();
 
@@ -130,7 +148,7 @@ void process_output(const char *file_name = "first_test.root"){
 ////////////////////////////////////////////////////////////////////////////////
 void LoadStyle(){
   int font = 42;
-  TGaxis::SetMaxDigits(2);
+  //TGaxis::SetMaxDigits(2);
 
   gStyle -> SetFrameBorderMode(0);
   gStyle -> SetFrameFillColor(0);
