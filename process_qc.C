@@ -18,20 +18,66 @@ void LoadStyle();
 
 using namespace std;
 
-void process_qc(const char *file_name = "test_files/reader.root"){
-  TFile *file = new TFile(file_name, "read");
-  auto hlist = (THashList*) file -> Get("d-q-table-reader/output");
-  auto list = (TList*) hlist -> FindObject("PairsMuonSEPM");
-  auto histMass_Pt = (TH2F*) list -> FindObject("Mass_Pt");
-  auto histMass_Int = (TH1F*) list -> FindObject("Mass");
+void process_qc(){
+  const char *input_file_name = "test_files/table_reader_output.root";
+  const char *output_file_fit_name = "test_files/qc_test.root";
 
-  histMass_Pt -> RebinX(5);
-  histMass_Pt -> RebinY(10);
+  const int dirNum = 3;
+  TString dirName[dirNum] = {"PairsMuonSEPM", "PairsMuonSEPP", "PairsMuonSEMM"};
+  const int hist1dNum = 2;
+  TString hist1dName[hist1dNum] = {"Mass", "Tauz"};
+  TH1F *hist1dVar[dirNum][hist1dNum];
+  const int hist2dNum = 1;
+  TString hist2dName[hist2dNum] = {"Mass_Pt"};
+  TH2F *hist2dVar[dirNum][hist2dNum];
+
+  TFile *file = new TFile(input_file_name, "read");
+  auto hlist = (THashList*) file -> Get("d-q-table-reader/output");
+  for(int iDir = 0;iDir < dirNum;iDir++){
+    auto list = (TList*) hlist -> FindObject(dirName[iDir].Data());
+    for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
+      hist1dVar[iDir][iHist1d] = (TH1F*) list -> FindObject(hist1dName[iHist1d].Data());
+      hist1dVar[iDir][iHist1d] -> SetName(dirName[iDir]);
+    }
+    for(int iHist2d = 0;iHist2d < hist2dNum;iHist2d++){
+      hist2dVar[iDir][iHist2d] = (TH2F*) list -> FindObject(hist2dName[iHist2d].Data());
+      hist2dVar[iDir][iHist2d] -> SetName(dirName[iDir]);
+    }
+  }
+
+  for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
+    auto canvasVar = new TCanvas("canvasVar", "",  600*dirNum, 600);
+    canvasVar -> Divide(dirNum,1);
+    for(int iDir = 0;iDir < dirNum;iDir++){
+      canvasVar -> cd(iDir+1);
+      gPad -> SetLogy(1);
+      hist1dVar[iDir][iHist1d] -> Draw("H");
+    }
+    canvasVar -> SaveAs(Form("figures/qc/%s.pdf", hist1dName[iHist1d].Data()));
+    delete canvasVar;
+  }
+
+  for(int iHist2d = 0;iHist2d < hist2dNum;iHist2d++){
+    auto canvasVar = new TCanvas("canvasVar", "",  600*dirNum, 600);
+    canvasVar -> Divide(dirNum,1);
+    for(int iDir = 0;iDir < dirNum;iDir++){
+      canvasVar -> cd(iDir+1);
+      hist2dVar[iDir][iHist2d] -> Draw("COLZ");
+    }
+    canvasVar -> SaveAs(Form("figures/qc/%s.pdf", hist2dName[iHist2d].Data()));
+    delete canvasVar;
+  }
+
+
+  // Fit the Mass distribution in different pt bins
+  // Rebin the mass - pT histograms
+  TH2F *histMass_Pt_tmp = (TH2F*) hist2dVar[0][0] -> Clone("histMass_Pt_tmp");
+  histMass_Pt_tmp -> RebinX(5);
+  histMass_Pt_tmp -> RebinY(10);
 
   TH1F *histMass[20];
-
   for(int iPtBin = 0;iPtBin < 20;iPtBin++){
-    histMass[iPtBin] = (TH1F*) histMass_Pt -> ProjectionX(Form("hMassSig_PtBin_%i", iPtBin), iPtBin+1, iPtBin+1, "e");
+    histMass[iPtBin] = (TH1F*) histMass_Pt_tmp -> ProjectionX(Form("hMassSig_PtBin_%i", iPtBin), iPtBin+1, iPtBin+1, "e");
     histMass[iPtBin] -> GetXaxis() -> SetRangeUser(2., 5.);
     histMass[iPtBin] -> SetMarkerSize(0.8);
     histMass[iPtBin] -> SetMarkerStyle(24);
@@ -45,10 +91,9 @@ void process_qc(const char *file_name = "test_files/reader.root"){
   TString  nameParameters[] = {"p0","p1","p2","p3","p4","p5","N_bkg","N_sig","mean","width"};
 
   // Create a DQFitter object and open the file where results will be saved
-  DQFitter dq_fitter("test_files/qc_test.root");
+  DQFitter dq_fitter(output_file_fit_name);
 
-
-  for(int iPt = 10;iPt < 14;iPt++){
+  for(int iPt = 0;iPt < 10;iPt++){
     // Set the histogram to fit
     dq_fitter.SetHistogram(histMass[iPt]);
 
@@ -68,31 +113,9 @@ void process_qc(const char *file_name = "test_files/reader.root"){
       dq_fitter.BinnedFitInvMassSpectrum(Form("Pt_%i_trial_%i", iPt, i));
     }
   }
-
-  // Test with RooFit
-  Double_t    rooParamValues[] = {3.1,0.07,9.86843e+01,-1.36136e+02,1.02017e+02,3.47559e-01,9.94951e-01,1.51834e+00,5000,50000};
-  Double_t rooMinParamLimits[] = {2.9,0.1,-100.,-100.,-100.,-100.,-100.,-100.,5000,50000};
-  Double_t rooMaxParamLimits[] = {3.2,0.05,100., 100., 100., 500., 100., 100.,20000,200000};
-  TString  rooNameParameters[] = {"mean","width","p0","p1","p2","p3","p4","p5","nsig","nbkg"};
-
-  for(int iPt = 10;iPt < 14;iPt++){
-    // Set the histogram to fit
-    dq_fitter.SetHistogram(histMass[iPt]);
-    // Inizialize the fitting paramters for RooFit
-    dq_fitter.InitParameters(10, rooParamValues, rooMinParamLimits, rooMaxParamLimits, rooNameParameters);
-    // Set the PDF for RooFit
-    dq_fitter.SetPDF(DQFitter::kFuncPol4ExpGaus);
-    // Fit the spectrum
-    dq_fitter.UnbinnedFitInvMassSpectrum(Form("Pt_%i_trialUnbinned", iPt));
-  }
-  // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
-}
-//------------------------------------------------------------------------------
-void process_output(const char *file_name = "test_files/qc_test.root"){
-  gStyle -> SetOptStat(0);
-  LoadStyle();
 
+  // Plot the mass peak position and the width of the J/psi
   TLatex *gLatexTitle = new TLatex();
   gLatexTitle -> SetTextSize(0.045);
   gLatexTitle -> SetNDC();
@@ -108,48 +131,49 @@ void process_output(const char *file_name = "test_files/qc_test.root"){
   histWidthJpsi -> SetMarkerColor(kRed);
   histWidthJpsi -> SetLineColor(kRed);
 
-  TFile *file = new TFile(file_name, "read");
+  TFile *file_fit = new TFile(output_file_fit_name, "read");
   for(int iPt = 0;iPt < 10;iPt++){
-    //auto dir = (TDirectory*) file -> Get(Form("Pt_%i_trial_0", iPt));
-    auto histResults = (TH1F*) file -> Get(Form("Pt_%i_trial_0/histResults", iPt));
+    auto canvasFt = (TCanvas*) file_fit -> Get(Form("Pt_%i_trial_0/canvasFit_Pt_%i_trial_0", iPt, iPt));
+    canvasFt -> SaveAs(Form("figures/qc/fit_Pt_%i.pdf", iPt));
+    auto histResults = (TH1F*) file_fit -> Get(Form("Pt_%i_trial_0/histResults", iPt));
     histMeanJpsi -> SetBinContent(iPt+1, histResults -> GetBinContent(11));
     histMeanJpsi -> SetBinError(iPt+1, histResults -> GetBinError(11));
     histWidthJpsi -> SetBinContent(iPt+1, histResults -> GetBinContent(12));
     histWidthJpsi -> SetBinError(iPt+1, histResults -> GetBinError(12));
   }
 
+  // J/psi mass peak position
+  TCanvas *canvasMeanJpsi = new TCanvas("canvasMeanJpsi", "", 800, 600);
+  canvasMeanJpsi -> SetLeftMargin(0.15);
   TH2D *histGridMeanJpsi = new TH2D("histGridMeanJpsi", "", 100, 0., 10., 100, 2., 4.);
   histGridMeanJpsi -> GetXaxis() -> SetTitle("#it{p}_{T} (GeV/#it{c})");
   histGridMeanJpsi -> GetYaxis() -> SetTitle("#it{m}_{J/#psi} (GeV/c^{2})");
   histGridMeanJpsi -> GetXaxis() -> SetTitleOffset(1.2);
   histGridMeanJpsi -> GetYaxis() -> SetTitleOffset(1.2);
-
-  TCanvas *canvasMeanJpsi = new TCanvas("canvasMeanJpsi", "", 800, 600);
-  canvasMeanJpsi -> SetLeftMargin(0.15);
   histGridMeanJpsi -> Draw();
   histMeanJpsi -> Draw("EPsame");
   gLatexTitle -> DrawLatex(0.25, 0.85, "pp #sqrt{#it{s}} = 900 GeV, J/#psi #rightarrow #mu^{+}#mu^{-}, LHC21i3d");
 
+  // J/psi width
+  TCanvas *canvasWidthJpsi = new TCanvas("canvasWidthJpsi", "", 800, 600);
+  canvasWidthJpsi -> SetLeftMargin(0.15);
   TH2D *histGridWidthJpsi = new TH2D("histGridWidthJpsi", "", 100, 0., 10., 100, 0., 0.2);
   histGridWidthJpsi -> GetXaxis() -> SetTitle("#it{p}_{T} (GeV/#it{c})");
   histGridWidthJpsi -> GetYaxis() -> SetTitle("#it{#sigma}_{J/#psi} (GeV/c^{2})");
   histGridWidthJpsi -> GetXaxis() -> SetTitleOffset(1.2);
   histGridWidthJpsi -> GetYaxis() -> SetTitleOffset(1.2);
-
-  TCanvas *canvasWidthJpsi = new TCanvas("canvasWidthJpsi", "", 800, 600);
-  canvasWidthJpsi -> SetLeftMargin(0.15);
-  histGridWidthJpsi -> Draw("");
+  histGridWidthJpsi -> Draw();
   histWidthJpsi -> Draw("EPsame");
   gLatexTitle -> DrawLatex(0.25, 0.85, "pp #sqrt{#it{s}} = 900 GeV, J/#psi #rightarrow #mu^{+}#mu^{-}, LHC21i3d");
 
-  //canvasMeanJpsi -> SaveAs("distribMeanJpsi.pdf");
-  //canvasWidthJpsi -> SaveAs("distribWidthJpsi.pdf");
+  // Save results
+  canvasMeanJpsi -> SaveAs("figures/qc/distribMeanJpsi.pdf");
+  canvasWidthJpsi -> SaveAs("figures/qc/distribWidthJpsi.pdf");
 }
 ////////////////////////////////////////////////////////////////////////////////
 void LoadStyle(){
   int font = 42;
   //TGaxis::SetMaxDigits(2);
-
   gStyle -> SetFrameBorderMode(0);
   gStyle -> SetFrameFillColor(0);
   gStyle -> SetCanvasBorderMode(0);
@@ -182,24 +206,22 @@ void LoadStyle(){
   gStyle -> SetEndErrorSize(0);
   gStyle -> SetCanvasPreferGL(kTRUE);
   gStyle -> SetHatchesSpacing(0.5);
-
-
-  gStyle->SetOptTitle(0);
-  gStyle->SetOptStat(0);
-  gStyle->SetLineWidth(2);
-  gStyle->SetPadLeftMargin(0.15);
-  gStyle->SetPadBottomMargin(0.15);
-  gStyle->SetPadTopMargin(0.05);
-  gStyle->SetPadRightMargin(0.05);
-  gStyle->SetTitleSize(0.06);
-  gStyle->SetTitleSize(0.06,"Y");
-  gStyle->SetTitleOffset(1,"Y");
-  gStyle->SetTitleOffset(1,"X");
-  gStyle->SetLabelSize(0.05);
-  gStyle->SetLabelSize(0.05,"Y");
-  gStyle->SetFrameLineWidth(2);
-  gStyle->SetNdivisions(505,"X");
-  gStyle->SetNdivisions(505,"Y");
-  gStyle->SetPadTickX(1);
-  gStyle->SetPadTickY(1);
+  gStyle -> SetOptTitle(0);
+  gStyle -> SetOptStat(0);
+  gStyle -> SetLineWidth(2);
+  gStyle -> SetPadLeftMargin(0.15);
+  gStyle -> SetPadBottomMargin(0.15);
+  gStyle -> SetPadTopMargin(0.05);
+  gStyle -> SetPadRightMargin(0.05);
+  gStyle -> SetTitleSize(0.06);
+  gStyle -> SetTitleSize(0.06,"Y");
+  gStyle -> SetTitleOffset(1,"Y");
+  gStyle -> SetTitleOffset(1,"X");
+  gStyle -> SetLabelSize(0.05);
+  gStyle -> SetLabelSize(0.05,"Y");
+  gStyle -> SetFrameLineWidth(2);
+  gStyle -> SetNdivisions(505,"X");
+  gStyle -> SetNdivisions(505,"Y");
+  gStyle -> SetPadTickX(1);
+  gStyle -> SetPadTickY(1);
 }
