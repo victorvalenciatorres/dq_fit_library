@@ -87,17 +87,20 @@ void test_fit(){
   // Inizialize the fitting paramters
   dq_fitter.InitParameters(5, paramValues, minParamLimits, maxParamLimits, nameParameters);
 
-  Double_t minFitRange[] = {0.1, 0.3, 0.5};
-  Double_t maxFitRange[] = {4.9, 4.7, 4.5};
+  Double_t minFitRange[] = {0.1, 0.2, 0.3};
+  Double_t maxFitRange[] = {4.9, 4.8, 4.7};
   for (int i = 0;i < 3;i++) {
     // Set the fit range
     dq_fitter.SetFitRange(minFitRange[i], maxFitRange[i]);
     // Set the fit method
-    dq_fitter.SetFitMethod("S0");
+    dq_fitter.SetFitMethod("SL");
     // Fit the spectrum
     dq_fitter.BinnedFitInvMassSpectrum(Form("trial_%i", i));
   }
+  dq_fitter.CloseOutputFile();
 
+  return;
+  /*
   // Test with RooFit
   Double_t    rooParamValues[] = {3,      0.1,     0.1, 2,   5000,   50000};
   Double_t rooMinParamLimits[] = {2,      0,       0,   -10, 5000,   50000};
@@ -112,4 +115,5 @@ void test_fit(){
   dq_fitter.UnbinnedFitInvMassSpectrum("trialUnbinned");
   // close the output file when all trials are finished
   dq_fitter.CloseOutputFile();
+  */
 }

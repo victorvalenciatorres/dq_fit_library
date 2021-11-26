@@ -1,4 +1,5 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
+#include "TSystem.h"
 #include "TFile.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -15,13 +16,23 @@
 #endif
 
 void LoadStyle();
+Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
 
 using namespace std;
 
-void process_qc(){
-  const char *input_file_name = "test_files/table_reader_output.root";
+void run_qc(){
+  // Path and files configurations
+  const char *input_dir_name       = "test_files";
+  const char *output_dir_name      = "test_files";
+  const char *input_file_name      = "test_files/table_reader_output.root";
   const char *output_file_fit_name = "test_files/qc_test.root";
 
+  if (gSystem -> GetPathInfo(Form("%s", output_dir_name),dummy1,dummy2,dummy3,dummy4) != 0) {
+    printf("\n************ WARNING: The directory does not exist, recreating... ************\n");
+    gSystem -> Exec(Form("mkdir -p test_files"));
+  }
+
+  // Histograms and and variables configurations
   const int dirNum = 3;
   TString dirName[dirNum] = {"PairsMuonSEPM", "PairsMuonSEPP", "PairsMuonSEMM"};
   const int hist1dNum = 2;

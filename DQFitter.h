@@ -67,6 +67,8 @@ private:
 
   // Histograms
   TH1F*    fHist;
+  TH1F*    fHistBkg;
+  TH1F*    fHistResiduals;
   TH1F*    fHistRatio;
   TH1F*    fHistResults;
 
@@ -81,6 +83,7 @@ private:
 
   // Fit parameters
   TString   fTrialName;
+  TString   fFitStatus;
   Int_t     fNParams;
   Double_t* fParams;
   Double_t* fMinParamLimits;

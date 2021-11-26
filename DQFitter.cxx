@@ -63,6 +63,7 @@ DQFitter::DQFitter(): TObject() {
   fMinFitRange      = 0.;
   fMaxFitRange      = 100;
   fFitMethod        = "SRL";
+  fFitStatus        = "Undefined";
 }
 //______________________________________________________________________________
 DQFitter::DQFitter(TString pathToFile): TObject() {
@@ -75,6 +76,7 @@ DQFitter::DQFitter(TString pathToFile): TObject() {
   fMinFitRange      = 0.;
   fMaxFitRange      = 100;
   fFitMethod        = "SRL";
+  fFitStatus        = "Undefined";
   OpenOutputFile(fPathToFile);
 }
 //______________________________________________________________________________
@@ -190,20 +192,32 @@ void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
 
   fFuncBkg -> SetParameters(1.,1.,1.,1.,1.,1.,1000.);
   TFitResultPtr ptrFitBkg;
-  ptrFitBkg = (TFitResultPtr) histBkg->Fit(fFuncBkg, fFitMethod, "", fMinFitRange, fMaxFitRange);
+  ptrFitBkg = (TFitResultPtr) histBkg->Fit(fFuncBkg, "RS", "", fMinFitRange, fMaxFitRange);
   for (Int_t iParBkg = 0;iParBkg < fNParBkg;iParBkg++) {
     fFuncTot->SetParameter(iParBkg, fFuncBkg->GetParameter(iParBkg));
   }
 
   // Fit the histogram signal + background
   TFitResultPtr ptrFit;
-  ptrFit = (TFitResultPtr) fHist->Fit(fFuncTot, fFitMethod, "", fMinFitRange, fMaxFitRange);
+  for(int i = 0;i < 10;i++){
+    cout << "Iteration " << i << endl;
+    if (i > 0) {
+      fFuncTot -> SetParameters(fFuncTot -> GetParameters());
+    }
+    ptrFit = (TFitResultPtr) fHist->Fit(fFuncTot, fFitMethod, "", fMinFitRange, fMaxFitRange);
+    if (gMinuit->fCstatu.Contains("CONVERGED")) {
+      break;
+    }
+  }
+  fFitStatus = gMinuit->fCstatu;
+  //ptrFit = (TFitResultPtr) fHist->Fit(fFuncTot, fFitMethod, "", fMinFitRange, fMaxFitRange);
   TMatrixDSym covSig  = ptrFit->GetCovarianceMatrix().GetSub(fNParBkg, fNParBkg+fNParSig-1, fNParBkg, fNParBkg+fNParSig-1);
 
   // Set Background prameters
   for (Int_t iParBkg = 0;iParBkg < fNParBkg;iParBkg++) {
     fFuncBkg->SetParameter(iParBkg, fFuncTot->GetParameter(iParBkg));
   }
+
   // Set Signal parameters
   for (Int_t iParSig = 0;iParSig < fNParSig;iParSig++) {
     fFuncSig->SetParameter(iParSig, fFuncTot->GetParameter(fNParBkg + iParSig));
@@ -235,7 +249,7 @@ void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
 void DQFitter::SaveResults() {
   // Create the directory where the output will be saved
   TDirectory *trialDir = fFile->mkdir(fTrialName);
-  TCanvas *canvasFit, *canvasRatio;
+  TCanvas *canvasFit, *canvasRatio, *canvasResiduals;
 
   if (fDoRooFit) {
     canvasFit = new TCanvas(Form("canvasFit_%s", fTrialName.Data()), Form("canvasFit_%s", fTrialName.Data()), 600, 600);
@@ -249,6 +263,8 @@ void DQFitter::SaveResults() {
     rooPlotRatio->addPlotable(rooHistRatio,"P") ;
     canvasRatio = new TCanvas(Form("canvasRatio_%s", fTrialName.Data()), Form("canvasRatio_%s", fTrialName.Data()), 600, 600);
     canvasRatio->SetLeftMargin(0.15);
+    canvasResiduals = new TCanvas(Form("canvasResiduals_%s", fTrialName.Data()), Form("canvasResiduals_%s", fTrialName.Data()), 600, 600);
+    canvasResiduals->SetLeftMargin(0.15);
     rooPlotRatio->GetYaxis()->SetTitleOffset(1.4);
     rooPlotRatio->Draw();
   } else {
@@ -257,7 +273,8 @@ void DQFitter::SaveResults() {
     fHist->SetTitle("");
     fHist->GetXaxis()->SetTitle("#it{M}_{#it{l^{+}}#it{l^{-}}} GeV/#it{c^{2}}");
     fHist->GetYaxis()->SetTitle("Entries");
-    fHist->SetMarkerStyle(20);
+    fHist->SetMarkerStyle(24);
+    fHist->SetMarkerSize(0.5);
     fHist->SetMarkerColor(kBlack);
     fHist->SetLineColor(kBlack);
 
@@ -277,13 +294,29 @@ void DQFitter::SaveResults() {
     fHistRatio->SetTitle("");
     fHistRatio->GetXaxis()->SetTitle("#it{M}_{#it{l^{+}}#it{l^{-}}} GeV/#it{c^{2}}");
     fHistRatio->GetYaxis()->SetTitle("Data / Fit");
-    fHistRatio->Sumw2();
     fHistRatio->Divide(fFuncTot);
     fHistRatio->GetYaxis()->SetRangeUser(0., 2.);
+    fHistRatio->SetMarkerStyle(20);
+    fHistRatio->SetMarkerSize(0.5);
+
+    fHistResiduals = (TH1F*) fHist->Clone("histResiduals");
+    fHistResiduals->SetTitle("");
+    fHistResiduals->GetXaxis()->SetTitle("#it{M}_{#it{l^{+}}#it{l^{-}}} GeV/#it{c^{2}}");
+    fHistResiduals->GetYaxis()->SetTitle("Residuals");
+    fHistResiduals->SetMarkerStyle(20);
+    fHistResiduals->SetMarkerSize(0.5);
+    fHistBkg = (TH1F*) fHist->Clone("histBkg");
+    for (int iBin = fHist->FindBin(fMinFitRange);iBin < fHist->FindBin(fMaxFitRange);iBin++){
+      fHistBkg->SetBinContent(iBin,fFuncBkg->Eval(fHistResiduals->GetBinCenter(iBin)));
+      fHistBkg->SetBinError(iBin,TMath::Sqrt(fFuncBkg->Eval(fHistResiduals->GetBinCenter(iBin))));
+    }
+    fHistResiduals->Add(fHistBkg, -1);
 
     // Draw fit results
-    TPaveText *paveText = new TPaveText(0.6,0.6,0.95,0.95,"brNDC");
-    paveText->SetTextSize(0.03);
+    TPaveText *paveText = new TPaveText(0.60,0.60,0.99,0.99,"brNDC");
+    paveText->SetTextFont(42);
+    paveText->SetTextSize(0.025);
+    paveText->AddText(Form("#bf{STATUS = %s}", fFitStatus.Data()));
     paveText->AddText(Form("#chi^{2}/NDF = %3.2f", fChiSquareNDF));
     paveText->AddText(Form("S = %1.0f #pm %1.0f", fSignal, fErrorSignal));
     for (int iPar = 0;iPar < fNParams;iPar++) {
@@ -302,20 +335,32 @@ void DQFitter::SaveResults() {
     TLine *lineUnity = new TLine(fMinFitRange, 1.,fMaxFitRange, 1.);
     lineUnity->SetLineStyle(kDashed);
     lineUnity->SetLineWidth(2);
-    lineUnity->SetLineColorAlpha(kRed, 0.4);
+    lineUnity->SetLineColor(kRed);
 
     canvasRatio = new TCanvas(Form("canvasRatio_%s", fTrialName.Data()), Form("canvasRatio_%s", fTrialName.Data()), 600, 600);
     fHistRatio->Draw("E0");
     lineUnity->Draw("same");
+
+    // Draw Residuals Data / Fit Bkg
+    TLine *lineZero = new TLine(fMinFitRange, 0.,fMaxFitRange, 0.);
+    lineZero->SetLineStyle(kDashed);
+    lineZero->SetLineWidth(2);
+    lineZero->SetLineColor(kRed);
+
+    canvasResiduals = new TCanvas(Form("canvasResiduals_%s", fTrialName.Data()), Form("canvasResiduals_%s", fTrialName.Data()), 600, 600);
+    fHistResiduals->Draw("E0");
+    lineZero->Draw("same");
   }
 
   // Save fHistResults and canvas into the output file
   trialDir->cd();
   canvasFit->Write();
   canvasRatio->Write();
+  canvasResiduals->Write();
   fHistResults->Write();
   delete canvasFit;
   delete canvasRatio;
+  delete canvasResiduals;
 }
 //______________________________________________________________________________
 void DQFitter::SetPDF(FitFunctionsList func) {
