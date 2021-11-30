@@ -16,34 +16,52 @@
 #endif
 
 void LoadStyle();
+void FitInvariantMass(TH2F *);
+
 Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
 
 using namespace std;
 
-void run_qc(){
-  // Path and files configurations
-  const char *input_dir_name       = "test_files";
-  const char *output_dir_name      = "test_files";
-  const char *input_file_name      = "test_files/table_reader_output.root";
-  const char *output_file_fit_name = "test_files/qc_test.root";
+void run_qc(TString input_file_name = "test_files/table_reader_output.root", TString input_type = "reader"){
+  // Histograms and and variables configurations
+  TH1F *hist1dVar[10][10];
+  TH2F *hist2dVar[10][10];
+  TString mainDirName;
+  std::vector<TString> dirName;
+  std::vector<TString> hist1dName;
+  std::vector<TString> hist2dName;
+  int dirNum;
+  int hist1dNum;
+  int hist2dNum;
 
-  if (gSystem -> GetPathInfo(Form("%s", output_dir_name),dummy1,dummy2,dummy3,dummy4) != 0) {
-    printf("\n************ WARNING: The directory does not exist, recreating... ************\n");
-    gSystem -> Exec(Form("mkdir -p test_files"));
+  if(input_type.Contains("reader")){
+    mainDirName = "d-q-table-reader";
+    TString initDirName[] = {"PairsMuonSEPM", "PairsMuonSEPP", "PairsMuonSEMM"};
+    TString initHist1dName[] = {"Mass", "Tauz"};
+    TString initHist2dName[] = {"Mass_Pt"};
+    dirNum = sizeof(initDirName)/sizeof(initDirName[0]);
+    hist1dNum = sizeof(initHist1dName)/sizeof(initHist1dName[0]);
+    hist2dNum = sizeof(initHist2dName)/sizeof(initHist2dName[0]);
+    copy(initDirName,    initDirName+dirNum,       back_inserter(dirName));
+    copy(initHist1dName, initHist1dName+hist1dNum, back_inserter(hist1dName));
+    copy(initHist2dName, initHist2dName+hist2dNum, back_inserter(hist2dName));
   }
 
-  // Histograms and and variables configurations
-  const int dirNum = 3;
-  TString dirName[dirNum] = {"PairsMuonSEPM", "PairsMuonSEPP", "PairsMuonSEMM"};
-  const int hist1dNum = 2;
-  TString hist1dName[hist1dNum] = {"Mass", "Tauz"};
-  TH1F *hist1dVar[dirNum][hist1dNum];
-  const int hist2dNum = 1;
-  TString hist2dName[hist2dNum] = {"Mass_Pt"};
-  TH2F *hist2dVar[dirNum][hist2dNum];
+  if(input_type.Contains("maker")){
+    mainDirName = "table-maker";
+    TString initDirName[] = {"TrackBarrel_BeforeCuts", "TrackBarrel_NoPID"};
+    TString initHist1dName[] = {"Pt"};
+    TString initHist2dName[] = {"TPCdedx_pIN"};
+    dirNum = sizeof(initDirName)/sizeof(initDirName[0]);
+    hist1dNum = sizeof(initHist1dName)/sizeof(initHist1dName[0]);
+    hist2dNum = sizeof(initHist2dName)/sizeof(initHist2dName[0]);
+    copy(initDirName,    initDirName+dirNum,       back_inserter(dirName));
+    copy(initHist1dName, initHist1dName+hist1dNum, back_inserter(hist1dName));
+    copy(initHist2dName, initHist2dName+hist2dNum, back_inserter(hist2dName));
+  }
 
   TFile *file = new TFile(input_file_name, "read");
-  auto hlist = (THashList*) file -> Get("d-q-table-reader/output");
+  auto hlist = (THashList*) file -> Get(Form("%s/output", mainDirName.Data()));
   for(int iDir = 0;iDir < dirNum;iDir++){
     auto list = (TList*) hlist -> FindObject(dirName[iDir].Data());
     for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
@@ -73,22 +91,31 @@ void run_qc(){
     canvasVar -> Divide(dirNum,1);
     for(int iDir = 0;iDir < dirNum;iDir++){
       canvasVar -> cd(iDir+1);
+      if(hist2dName[iHist2d].Contains("dedx")){
+        gPad -> SetLogx(1);
+      }
       hist2dVar[iDir][iHist2d] -> Draw("COLZ");
     }
     canvasVar -> SaveAs(Form("figures/qc/%s.pdf", hist2dName[iHist2d].Data()));
     delete canvasVar;
   }
 
-
+  // select the TH2D with mass and pT
+  if(input_type.Contains("reader")){
+    FitInvariantMass(hist2dVar[0][0]);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+void FitInvariantMass(TH2F *histMassPt){
+  const char *output_file_fit_name = "test_files/qc_test.root";
   // Fit the Mass distribution in different pt bins
   // Rebin the mass - pT histograms
-  TH2F *histMass_Pt_tmp = (TH2F*) hist2dVar[0][0] -> Clone("histMass_Pt_tmp");
-  histMass_Pt_tmp -> RebinX(5);
-  histMass_Pt_tmp -> RebinY(10);
+  histMassPt -> RebinX(5);
+  histMassPt -> RebinY(10);
 
   TH1F *histMass[20];
   for(int iPtBin = 0;iPtBin < 20;iPtBin++){
-    histMass[iPtBin] = (TH1F*) histMass_Pt_tmp -> ProjectionX(Form("hMassSig_PtBin_%i", iPtBin), iPtBin+1, iPtBin+1, "e");
+    histMass[iPtBin] = (TH1F*) histMassPt -> ProjectionX(Form("hMassSig_PtBin_%i", iPtBin), iPtBin+1, iPtBin+1, "e");
     histMass[iPtBin] -> GetXaxis() -> SetRangeUser(2., 5.);
     histMass[iPtBin] -> SetMarkerSize(0.8);
     histMass[iPtBin] -> SetMarkerStyle(24);

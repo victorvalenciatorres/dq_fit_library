@@ -311,6 +311,7 @@ void DQFitter::SaveResults() {
       fHistBkg->SetBinError(iBin,TMath::Sqrt(fFuncBkg->Eval(fHistResiduals->GetBinCenter(iBin))));
     }
     fHistResiduals->Add(fHistBkg, -1);
+    fHistResiduals->GetYaxis()->SetRangeUser(1.5*fHistResiduals->GetMinimum(),1.5*fHistResiduals->GetMaximum());
 
     // Draw fit results
     TPaveText *paveText = new TPaveText(0.60,0.60,0.99,0.99,"brNDC");
