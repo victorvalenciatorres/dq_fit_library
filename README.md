@@ -23,3 +23,7 @@ At this point the PDF can be added to the class and used for the fit.
 ## QC macro
 This macro can be used to produce control plots reading the O2 DQ tableMaker and tableReader.In addition it extracts basic J/psi
 basic features (mass position and width) using the DQ fit library
+
+In the root environment run with:
+* **.x DQFitter.cxx+**
+* **.x run_qc.C++**
