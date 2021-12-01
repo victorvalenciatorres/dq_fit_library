@@ -54,7 +54,7 @@ using namespace RooFit;
 Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
 TString outputFigureDirName = "figures/test_fit";
 
-void test_fit(){
+void run_test_fit(){
 
   if(gSystem -> GetPathInfo(Form("%s",outputFigureDirName.Data()),dummy1,dummy2,dummy3,dummy4) != 0){
     gSystem -> Exec(Form("mkdir -p %s",outputFigureDirName.Data()));
