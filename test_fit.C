@@ -93,11 +93,20 @@ void test_fit(){
     // Set the fit range
     dq_fitter.SetFitRange(minFitRange[i], maxFitRange[i]);
     // Set the fit method
-    dq_fitter.SetFitMethod("SL");
+    dq_fitter.SetFitMethod("SL0Q");
     // Fit the spectrum
     dq_fitter.BinnedFitInvMassSpectrum(Form("trial_%i", i));
   }
   dq_fitter.CloseOutputFile();
+
+
+  // Plot results
+  TFile *file_fit = new TFile("test_files/FitResults.root", "read");
+  for(int i = 0;i < 3;i++){
+    auto canvasFit = (TCanvas*) file_fit -> Get(Form("trial_%i/canvasFit_trial_%i", i, i));
+    canvasFit -> SaveAs(Form("figures/test_fit/fit_trial_%i.pdf", i));
+  }
+
 
   return;
   /*

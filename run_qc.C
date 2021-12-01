@@ -22,7 +22,9 @@ Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
 
 using namespace std;
 
-void run_qc(TString input_file_name = "test_files/table_reader_output.root", TString input_type = "reader"){
+void run_qc(TString input_file_name = "test_files/table_maker_output.root", TString input_type = "maker"){
+  LoadStyle();
+
   // Histograms and and variables configurations
   TH1F *hist1dVar[10][10];
   TH2F *hist2dVar[10][10];
@@ -49,9 +51,9 @@ void run_qc(TString input_file_name = "test_files/table_reader_output.root", TSt
 
   if(input_type.Contains("maker")){
     mainDirName = "table-maker";
-    TString initDirName[] = {"TrackBarrel_BeforeCuts", "TrackBarrel_NoPID"};
-    TString initHist1dName[] = {"Pt"};
-    TString initHist2dName[] = {"TPCdedx_pIN"};
+    TString initDirName[] = {"TrackBarrel_BeforeCuts"};
+    TString initHist1dName[] = {"Pt", "Eta", "Phi", "DCAxy", "DCAz"};
+    TString initHist2dName[] = {"TPCdedx_pIN", "TPCnSigEle_pIN"};
     dirNum = sizeof(initDirName)/sizeof(initDirName[0]);
     hist1dNum = sizeof(initHist1dName)/sizeof(initHist1dName[0]);
     hist2dNum = sizeof(initHist2dName)/sizeof(initHist2dName[0]);
@@ -171,8 +173,8 @@ void FitInvariantMass(TH2F *histMassPt){
 
   TFile *file_fit = new TFile(output_file_fit_name, "read");
   for(int iPt = 0;iPt < 10;iPt++){
-    auto canvasFt = (TCanvas*) file_fit -> Get(Form("Pt_%i_trial_0/canvasFit_Pt_%i_trial_0", iPt, iPt));
-    canvasFt -> SaveAs(Form("figures/qc/fit_Pt_%i.pdf", iPt));
+    auto canvasFit = (TCanvas*) file_fit -> Get(Form("Pt_%i_trial_0/canvasFit_Pt_%i_trial_0", iPt, iPt));
+    canvasFit -> SaveAs(Form("figures/qc/fit_Pt_%i.pdf", iPt));
     auto histResults = (TH1F*) file_fit -> Get(Form("Pt_%i_trial_0/histResults", iPt));
     histMeanJpsi -> SetBinContent(iPt+1, histResults -> GetBinContent(11));
     histMeanJpsi -> SetBinError(iPt+1, histResults -> GetBinError(11));
@@ -240,12 +242,11 @@ void LoadStyle(){
   gStyle -> SetTitleOffset(1.02,"y");
   gStyle -> SetTitleSize(0.04,"xyz");
   gStyle -> SetMarkerSize(1.3);
-  gStyle -> SetOptStat(0);
+  gStyle -> SetOptStat(111111);
   gStyle -> SetEndErrorSize(0);
   gStyle -> SetCanvasPreferGL(kTRUE);
   gStyle -> SetHatchesSpacing(0.5);
   gStyle -> SetOptTitle(0);
-  gStyle -> SetOptStat(0);
   gStyle -> SetLineWidth(2);
   gStyle -> SetPadLeftMargin(0.15);
   gStyle -> SetPadBottomMargin(0.15);
