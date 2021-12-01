@@ -16,14 +16,19 @@
 #endif
 
 void LoadStyle();
-void FitInvariantMass(TH2F *);
+void FitInvariantMass(TH2F *, TString);
 
 Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
+TString outputFigureDirName = "figures/qc";
 
 using namespace std;
 
-void run_qc(TString input_file_name = "test_files/table_maker_output.root", TString input_type = "maker"){
+void run_qc(TString input_file_name = "data/table_reader_output.root", TString output_file_name = "data/qc_test.root", TString input_type = "reader"){
   LoadStyle();
+
+  if(gSystem -> GetPathInfo(Form("%s",outputFigureDirName.Data()),dummy1,dummy2,dummy3,dummy4) != 0){
+    gSystem -> Exec(Form("mkdir -p %s",outputFigureDirName.Data()));
+  }
 
   // Histograms and and variables configurations
   TH1F *hist1dVar[10][10];
@@ -84,7 +89,7 @@ void run_qc(TString input_file_name = "test_files/table_maker_output.root", TStr
       gPad -> SetLogy(1);
       hist1dVar[iDir][iHist1d] -> Draw("H");
     }
-    canvasVar -> SaveAs(Form("figures/qc/%s.pdf", hist1dName[iHist1d].Data()));
+    canvasVar -> SaveAs(Form("%s/%s.pdf", outputFigureDirName.Data(), hist1dName[iHist1d].Data()));
     delete canvasVar;
   }
 
@@ -98,18 +103,17 @@ void run_qc(TString input_file_name = "test_files/table_maker_output.root", TStr
       }
       hist2dVar[iDir][iHist2d] -> Draw("COLZ");
     }
-    canvasVar -> SaveAs(Form("figures/qc/%s.pdf", hist2dName[iHist2d].Data()));
+    canvasVar -> SaveAs(Form("%s/%s.pdf", outputFigureDirName.Data(), hist2dName[iHist2d].Data()));
     delete canvasVar;
   }
 
   // select the TH2D with mass and pT
   if(input_type.Contains("reader")){
-    FitInvariantMass(hist2dVar[0][0]);
+    FitInvariantMass(hist2dVar[0][0], output_file_name);
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
-void FitInvariantMass(TH2F *histMassPt){
-  const char *output_file_fit_name = "test_files/qc_test.root";
+void FitInvariantMass(TH2F *histMassPt, TString output_file_name){
   // Fit the Mass distribution in different pt bins
   // Rebin the mass - pT histograms
   histMassPt -> RebinX(5);
@@ -131,7 +135,7 @@ void FitInvariantMass(TH2F *histMassPt){
   TString  nameParameters[] = {"p0","p1","p2","p3","p4","p5","N_bkg","N_sig","mean","width"};
 
   // Create a DQFitter object and open the file where results will be saved
-  DQFitter dq_fitter(output_file_fit_name);
+  DQFitter dq_fitter(output_file_name);
 
   for(int iPt = 0;iPt < 10;iPt++){
     // Set the histogram to fit
@@ -171,10 +175,10 @@ void FitInvariantMass(TH2F *histMassPt){
   histWidthJpsi -> SetMarkerColor(kRed);
   histWidthJpsi -> SetLineColor(kRed);
 
-  TFile *file_fit = new TFile(output_file_fit_name, "read");
+  TFile *file_fit = new TFile(output_file_name, "read");
   for(int iPt = 0;iPt < 10;iPt++){
     auto canvasFit = (TCanvas*) file_fit -> Get(Form("Pt_%i_trial_0/canvasFit_Pt_%i_trial_0", iPt, iPt));
-    canvasFit -> SaveAs(Form("figures/qc/fit_Pt_%i.pdf", iPt));
+    canvasFit -> SaveAs(Form("%s/fit_Pt_%i.pdf", outputFigureDirName.Data(), iPt));
     auto histResults = (TH1F*) file_fit -> Get(Form("Pt_%i_trial_0/histResults", iPt));
     histMeanJpsi -> SetBinContent(iPt+1, histResults -> GetBinContent(11));
     histMeanJpsi -> SetBinError(iPt+1, histResults -> GetBinError(11));
@@ -207,8 +211,8 @@ void FitInvariantMass(TH2F *histMassPt){
   gLatexTitle -> DrawLatex(0.25, 0.85, "pp #sqrt{#it{s}} = 900 GeV, J/#psi #rightarrow #mu^{+}#mu^{-}, LHC21i3d");
 
   // Save results
-  canvasMeanJpsi -> SaveAs("figures/qc/distribMeanJpsi.pdf");
-  canvasWidthJpsi -> SaveAs("figures/qc/distribWidthJpsi.pdf");
+  canvasMeanJpsi -> SaveAs(Form("%s/distribMeanJpsi.pdf", outputFigureDirName.Data()));
+  canvasWidthJpsi -> SaveAs(Form("%s/distribWidthJpsi.pdf", outputFigureDirName.Data()));
 }
 ////////////////////////////////////////////////////////////////////////////////
 void LoadStyle(){

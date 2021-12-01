@@ -51,7 +51,15 @@ using namespace RooFit;
 #include "DQFitter.h"
 #endif
 
+Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
+TString outputFigureDirName = "figures/test_fit";
+
 void test_fit(){
+
+  if(gSystem -> GetPathInfo(Form("%s",outputFigureDirName.Data()),dummy1,dummy2,dummy3,dummy4) != 0){
+    gSystem -> Exec(Form("mkdir -p %s",outputFigureDirName.Data()));
+  }
+
   // Generate a signal (gaus) + background (exponential)
   TF1 *funcBkg = new TF1("funcBkg", "expo", 0., 5.);
   funcBkg->SetParameter(0, 0.00);
@@ -78,7 +86,7 @@ void test_fit(){
   TString  nameParameters[] = {"p0",   "p1",   "p2",   "mean", "width"};
 
   // Create a DQFitter object and open the file where results will be saved
-  DQFitter dq_fitter("test_files/FitResults.root");
+  DQFitter dq_fitter("data/test_fit_results.root");
   // Set the histogram to fit
   dq_fitter.SetHistogram(hist);
 
@@ -101,10 +109,10 @@ void test_fit(){
 
 
   // Plot results
-  TFile *file_fit = new TFile("test_files/FitResults.root", "read");
+  TFile *file_fit = new TFile("data/test_fit_results.root", "read");
   for(int i = 0;i < 3;i++){
     auto canvasFit = (TCanvas*) file_fit -> Get(Form("trial_%i/canvasFit_trial_%i", i, i));
-    canvasFit -> SaveAs(Form("figures/test_fit/fit_trial_%i.pdf", i));
+    canvasFit -> SaveAs(Form("%s/fit_trial_%i.pdf", outputFigureDirName.Data(), i));
   }
 
 
