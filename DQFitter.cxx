@@ -164,6 +164,8 @@ void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
   fTrialName = trialName;
 
   // Set/Fix the function parameters
+  fFuncTot->SetNpx(10000);
+  fFuncSig->SetNpx(10000);
   for (int iPar = 0;iPar < fNParams;iPar++) {
     fFuncTot->SetParName(iPar, fParamNames[iPar].Data());
     if (fMinParamLimits[iPar] == fMaxParamLimits[iPar]) {
@@ -291,6 +293,7 @@ void DQFitter::SaveResults() {
     fFuncSig->SetLineStyle(kDashed);
 
     fHistRatio = (TH1F*) fHist->Clone("histRatio");
+    fHistRatio->Sumw2(1);
     fHistRatio->SetTitle("");
     fHistRatio->GetXaxis()->SetTitle("#it{M}_{#it{l^{+}}#it{l^{-}}} GeV/#it{c^{2}}");
     fHistRatio->GetYaxis()->SetTitle("Data / Fit");
