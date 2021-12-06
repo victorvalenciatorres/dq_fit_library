@@ -263,12 +263,18 @@ void DQFitter::SaveResults() {
     RooHist* rooHistRatio = fRooPlot->residHist();
     RooPlot* rooPlotRatio = fRooMass.frame(Title("Residual Distribution")) ;
     rooPlotRatio->addPlotable(rooHistRatio,"P") ;
-    canvasRatio = new TCanvas(Form("canvasRatio_%s", fTrialName.Data()), Form("canvasRatio_%s", fTrialName.Data()), 600, 600);
+    canvasRatio = new TCanvas(Form("canvasResiduals_%s", fTrialName.Data()), Form("canvasRatio_%s", fTrialName.Data()), 600, 600);
     canvasRatio->SetLeftMargin(0.15);
-    canvasResiduals = new TCanvas(Form("canvasResiduals_%s", fTrialName.Data()), Form("canvasResiduals_%s", fTrialName.Data()), 600, 600);
-    canvasResiduals->SetLeftMargin(0.15);
     rooPlotRatio->GetYaxis()->SetTitleOffset(1.4);
     rooPlotRatio->Draw();
+
+    RooHist* rooHistPull = fRooPlot->pullHist();
+    RooPlot* rooPlotPull = fRooMass.frame(Title("Pull Distribution")) ;
+    rooPlotPull->addPlotable(rooHistPull,"P") ;
+    canvasResiduals = new TCanvas(Form("canvasPull_%s", fTrialName.Data()), Form("canvasResiduals_%s", fTrialName.Data()), 600, 600);
+    canvasResiduals->SetLeftMargin(0.15);
+    rooPlotPull->GetYaxis()->SetTitleOffset(1.4);
+    rooPlotPull->Draw();
   } else {
     gStyle->SetOptStat(0);
 
