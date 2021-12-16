@@ -46,6 +46,7 @@ public:
   void OpenOutputFile(TString pathToFile);
   void CloseOutputFile();
   void SetHistogram(TH1F* hist);
+  void SetUserFunction(const char *nameFunc[3], Int_t nParams[3]);
   void SetFunction(FitFunctionsList func);
   void SetPDF(FitFunctionsList func);
   void InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams);

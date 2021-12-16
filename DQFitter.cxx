@@ -48,6 +48,7 @@ using namespace RooFit;
 
 // My includes
 #include "Fit_Library/FunctionLibrary.C"
+#include "Fit_Library/UserFunctionLibrary.cxx"
 #include "DQFitter.h"
 
 ClassImp(DQFitter)
@@ -101,6 +102,15 @@ void DQFitter::CloseOutputFile() {
 void DQFitter::SetHistogram(TH1F *hist) {
   fHist = hist;
   fHist->GetYaxis()->SetRangeUser(0., 2.*fHist->GetMaximum());
+}
+//______________________________________________________________________________
+void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
+  // WARNING --> To see the function and the fit superimposed you need to load UserFunctions.cxx
+  fFuncSig = new TF1("fFuncSig", nameFunc[0], -100., 100., nParams[0]);
+  fNParSig = nParams[0];
+  fFuncBkg = new TF1("fFuncBkg", nameFunc[1], -100., 100., nParams[1]);
+  fNParBkg = nParams[1];
+  fFuncTot = new TF1("fFuncTot", nameFunc[2], -100., 100., nParams[2]);
 }
 //______________________________________________________________________________
 void DQFitter::SetFunction(FitFunctionsList func) {
