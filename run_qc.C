@@ -10,12 +10,15 @@
 #include "TStyle.h"
 #include "TLatex.h"
 #include "TEfficiency.h"
+#include "TRatioPlot.h"
 
 // my includes
 #include "DQFitter.h"
 #endif
 
+void run_production_comparison(TString , TString);
 void LoadStyle();
+void DrawRatioPlot(TH1F *, TH1F *, TString, TString);
 void FitInvariantMass(TH2F *, TString);
 
 Long_t *dummy1 = 0, *dummy2 = 0, *dummy3 = 0, *dummy4 = 0;
@@ -213,6 +216,103 @@ void FitInvariantMass(TH2F *histMassPt, TString output_file_name){
   // Save results
   canvasMeanJpsi -> SaveAs(Form("%s/distribMeanJpsi.pdf", outputFigureDirName.Data()));
   canvasWidthJpsi -> SaveAs(Form("%s/distribWidthJpsi.pdf", outputFigureDirName.Data()));
+}
+////////////////////////////////////////////////////////////////////////////////
+void run_production_comparison(TString process = "table-maker", TString output_dir_name = "figures/qc/pilot_run"){
+  TH1F *hist1dVar_pass1[10][10];
+  TH2F *hist2dVar_pass1[10][10];
+  TH1F *hist1dVar_pass2[10][10];
+  TH2F *hist2dVar_pass2[10][10];
+  std::vector<TString> dirName;
+  std::vector<TString> hist1dName;
+  std::vector<TString> hist2dName;
+  int dirNum;
+  int hist1dNum;
+  int hist2dNum;
+
+  TString initDirName[] = {"TrackBarrel_BeforeCuts", "TrackBarrel_jpsiO2MCdebugCuts"};
+  TString initHist1dName[] = {"Pt", "Eta", "Phi"};
+  TString initHist2dName[] = {"TPCdedx_pIN", "TPCnSigEle_pIN"};
+  dirNum = sizeof(initDirName)/sizeof(initDirName[0]);
+  hist1dNum = sizeof(initHist1dName)/sizeof(initHist1dName[0]);
+  hist2dNum = sizeof(initHist2dName)/sizeof(initHist2dName[0]);
+  copy(initDirName,    initDirName+dirNum,       back_inserter(dirName));
+  copy(initHist1dName, initHist1dName+hist1dNum, back_inserter(hist1dName));
+  copy(initHist2dName, initHist2dName+hist2dNum, back_inserter(hist2dName));
+
+  TFile *fIn_pass1 = new TFile("data/pilot_run/AnalysisResults_apass1.root", "READ");
+  auto hlist_pass1 = (THashList*) fIn_pass1 -> Get(Form("%s/output", process.Data()));
+  for(int iDir = 0;iDir < dirNum;iDir++){
+    auto list = (TList*) hlist_pass1 -> FindObject(dirName[iDir].Data());
+    for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
+      hist1dVar_pass1[iDir][iHist1d] = (TH1F*) list -> FindObject(hist1dName[iHist1d].Data());
+      hist1dVar_pass1[iDir][iHist1d] -> SetName(dirName[iDir]);
+      hist1dVar_pass1[iDir][iHist1d] -> Scale(1./hist1dVar_pass1[iDir][iHist1d] -> Integral());
+      hist1dVar_pass1[iDir][iHist1d] -> SetMarkerStyle(20);
+      hist1dVar_pass1[iDir][iHist1d] -> SetMarkerColor(kBlack);
+      hist1dVar_pass1[iDir][iHist1d] -> SetLineColor(kBlack);
+
+      if(hist1dName[iHist1d].Contains("Pt")){
+        hist1dVar_pass1[iDir][iHist1d] -> GetXaxis() -> SetRangeUser(0, 5);
+        hist1dVar_pass1[iDir][iHist1d] -> Rebin(40);
+      } else {
+        hist1dVar_pass1[iDir][iHist1d] -> Rebin(5);
+      }
+    }
+    for(int iHist2d = 0;iHist2d < hist2dNum;iHist2d++){
+      hist2dVar_pass1[iDir][iHist2d] = (TH2F*) list -> FindObject(hist2dName[iHist2d].Data());
+      hist2dVar_pass1[iDir][iHist2d] -> SetName(dirName[iDir]);
+    }
+  }
+
+  TFile *fIn_pass2 = new TFile("data/pilot_run/AnalysisResults_apass2.root", "READ");
+  auto hlist_pass2 = (THashList*) fIn_pass2 -> Get(Form("%s/output", process.Data()));
+  for(int iDir = 0;iDir < dirNum;iDir++){
+    auto list = (TList*) hlist_pass2 -> FindObject(dirName[iDir].Data());
+    for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
+      hist1dVar_pass2[iDir][iHist1d] = (TH1F*) list -> FindObject(hist1dName[iHist1d].Data());
+      hist1dVar_pass2[iDir][iHist1d] -> SetName(dirName[iDir]);
+      hist1dVar_pass2[iDir][iHist1d] -> Scale(1./hist1dVar_pass2[iDir][iHist1d] -> Integral());
+      hist1dVar_pass2[iDir][iHist1d] -> SetMarkerStyle(24);
+      hist1dVar_pass2[iDir][iHist1d] -> SetMarkerSize(0.3);
+      hist1dVar_pass2[iDir][iHist1d] -> SetMarkerColor(kRed);
+      hist1dVar_pass2[iDir][iHist1d] -> SetLineColor(kRed);
+
+      if(hist1dName[iHist1d].Contains("Pt")){
+        hist1dVar_pass1[iDir][iHist1d] -> GetXaxis() -> SetRangeUser(0, 5);
+        hist1dVar_pass2[iDir][iHist1d] -> Rebin(40);
+      } else {
+        hist1dVar_pass2[iDir][iHist1d] -> Rebin(5);
+      }
+    }
+    for(int iHist2d = 0;iHist2d < hist2dNum;iHist2d++){
+      hist2dVar_pass2[iDir][iHist2d] = (TH2F*) list -> FindObject(hist2dName[iHist2d].Data());
+      hist2dVar_pass2[iDir][iHist2d] -> SetName(dirName[iDir]);
+    }
+  }
+
+  for(int iDir = 0;iDir < dirNum;iDir++){
+    for(int iHist1d = 0;iHist1d < hist1dNum;iHist1d++){
+      DrawRatioPlot(hist1dVar_pass1[iDir][iHist1d], hist1dVar_pass2[iDir][iHist1d], output_dir_name,initHist1dName[iHist1d] + initDirName[iDir]);
+    }
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+void DrawRatioPlot(TH1F *hist1, TH1F *hist2, TString dirName, TString plotName){
+  gStyle->SetOptStat(0);
+  auto canvas = new TCanvas("canvas", "A ratio example");
+  auto ratioPlot = new TRatioPlot(hist1, hist2);
+  if(plotName.Contains("Pt")){
+    gPad -> SetLogy(1);
+  }
+  ratioPlot -> Draw();
+  if(plotName.Contains("Pt")){
+    ratioPlot -> GetLowerRefYaxis() -> SetRangeUser(0.,2.);
+  }
+  canvas -> Update();
+  canvas -> SaveAs(Form("%s/ratio_%s.pdf", dirName.Data(), plotName.Data()));
+  delete canvas;
+  delete ratioPlot;
 }
 ////////////////////////////////////////////////////////////////////////////////
 void LoadStyle(){
