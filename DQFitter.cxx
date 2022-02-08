@@ -47,8 +47,8 @@
 using namespace RooFit;
 
 // My includes
-#include "Fit_Library/FunctionLibrary.C"
-#include "Fit_Library/UserFunctionLibrary.cxx"
+#include "fit_library/FunctionLibrary.C"
+#include "fit_library/UserFunctionLibrary.cxx"
 #include "DQFitter.h"
 
 ClassImp(DQFitter)
@@ -104,6 +104,10 @@ void DQFitter::SetHistogram(TH1F *hist) {
   fHist->GetYaxis()->SetRangeUser(0., 2.*fHist->GetMaximum());
 }
 //______________________________________________________________________________
+void DQFitter::SetTree(TTree *tree) {
+  fTree = tree;
+}
+//______________________________________________________________________________
 void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
   // WARNING --> To see the function and the fit superimposed you need to load UserFunctions.cxx
   fFuncSig = new TF1("fFuncSig", nameFunc[0], -100., 100., nParams[0]);
@@ -111,46 +115,6 @@ void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
   fFuncBkg = new TF1("fFuncBkg", nameFunc[1], -100., 100., nParams[1]);
   fNParBkg = nParams[1];
   fFuncTot = new TF1("fFuncTot", nameFunc[2], -100., 100., nParams[2]);
-}
-//______________________________________________________________________________
-void DQFitter::SetFunction(FitFunctionsList func) {
-  switch (func) {
-    case kFuncPol1 :
-      fFuncTot = new TF1("funcPol1", FuncPol1, -100., 100., nParameters[kFuncPol1]);
-      break;
-    case kFuncExp :
-      fFuncTot = new TF1("funcExp", FuncExp, -100., 100., nParameters[kFuncExp]);
-      break;
-    case kFuncPol4Exp :
-      fFuncTot = new TF1("funcPol4Exp", FuncPol4Exp, -100., 100., nParameters[kFuncPol4Exp]);
-      break;
-    case kFuncGaus :
-      fFuncTot = new TF1("funcGaus", FuncGaus, -100., 100., nParameters[kFuncGaus]);
-      break;
-    case kFuncPol1Gaus :
-      fFuncTot = new TF1("funcPol1Gaus", FuncPol1Gaus, -100., 100., nParameters[kFuncPol1Gaus]);
-      fFuncBkg = new TF1("funcPol1",     FuncPol1,     -100., 100., nParameters[kFuncPol1]);
-      fNParBkg = nParameters[kFuncPol1];
-      fFuncSig = new TF1("funcGaus",     FuncGaus,     -100., 100., nParameters[kFuncGaus]);
-      fNParSig = nParameters[kFuncGaus];
-      break;
-    case kFuncExpGaus :
-      fFuncTot = new TF1("funcExpGaus", FuncExpGaus, -100., 100., nParameters[kFuncExpGaus]);
-      fFuncBkg = new TF1("funcExp",     FuncExp,     -100., 100., nParameters[kFuncExp]);
-      fNParBkg = nParameters[kFuncExp];
-      fFuncSig = new TF1("funcGaus",    FuncGaus,    -100., 100., nParameters[kFuncGaus]);
-      fNParSig = nParameters[kFuncGaus];
-      break;
-    case kFuncPol4ExpGaus :
-      fFuncTot = new TF1("funcPol4ExpGaus", FuncPol4ExpGaus, -100., 100., nParameters[kFuncPol4ExpGaus]);
-      fFuncBkg = new TF1("funcPol4Exp",     FuncPol4Exp,     -100., 100., nParameters[kFuncPol4Exp]);
-      fNParBkg = nParameters[kFuncPol4Exp];
-      fFuncSig = new TF1("funcGaus",    FuncGaus,    -100., 100., nParameters[kFuncGaus]);
-      fNParSig = nParameters[kFuncGaus];
-      break;
-    case kNFunctions :
-      break;
-  }
 }
 //______________________________________________________________________________
 void DQFitter::SetFitRange(Double_t minFitRange, Double_t maxFitRange) {
@@ -383,52 +347,31 @@ void DQFitter::SaveResults() {
   delete canvasResiduals;
 }
 //______________________________________________________________________________
-void DQFitter::SetPDF(FitFunctionsList func) {
+void DQFitter::SetUserPDF(const char *nameFunc[3], Int_t nParams[3]) {
   fRooMass = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5);
-  switch (func) {
-    case kFuncPol1 :
-      break;
-    case kFuncExp :
-      break;
-    case kFuncPol4Exp :
-      break;
-    case kFuncGaus :
-      break;
-    case kFuncPol1Gaus :
-      break;
-    case kFuncExpGaus :
-      gROOT->ProcessLineSync(".x Fit_Library/GausPdf.cxx+");
-      gROOT->ProcessLineSync(".x Fit_Library/ExpPdf.cxx+");
-      fRooWorkspace.factory(Form("GausPdf::myGaus(m[2,5], mean[%f,%f,%f], width[%f,%f,%f])",
-      fParams[0],fMinParamLimits[0],fMaxParamLimits[0],
-      fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
-      fRooWorkspace.factory(Form("ExpPdf::myExp(m[2,5], a[%f,%f,%f], b[%f,%f,%f])",
-      fParams[2],fMinParamLimits[2],fMaxParamLimits[2],
-      fParams[3],fMinParamLimits[3],fMaxParamLimits[3]));
-      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myExp)",
-      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
-      fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
-      break;
-    case kFuncPol4ExpGaus :
-      gROOT->ProcessLineSync(".x Fit_Library/GausPdf.cxx+");
-      gROOT->ProcessLineSync(".x Fit_Library/Pol4ExpPdf.cxx+");
-      fRooWorkspace.factory(Form("GausPdf::myGaus(m[2,5], mean[%f,%f,%f], width[%f,%f,%f])",
-      fParams[0],fMinParamLimits[0],fMaxParamLimits[0],
-      fParams[1],fMinParamLimits[1],fMaxParamLimits[1]));
-      fRooWorkspace.factory(Form("Pol4ExpPdf::myPol4Exp(m[2,5], p0[%f,%f,%f], p1[%f,%f,%f], p2[%f,%f,%f], p3[%f,%f,%f], p4[%f,%f,%f], p5[%f,%f,%f])",
-      fParams[2],fMinParamLimits[2],fMaxParamLimits[2],
-      fParams[3],fMinParamLimits[3],fMaxParamLimits[3],
-      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
-      fParams[5],fMinParamLimits[5],fMaxParamLimits[5],
-      fParams[6],fMinParamLimits[6],fMaxParamLimits[6],
-      fParams[7],fMinParamLimits[7],fMaxParamLimits[7]));
-      fRooWorkspace.factory(Form("SUM::sum(nsig[%f,%f,%f]*myGaus,nbkg[%f,%f,%f]*myPol4Exp)",
-      fParams[4],fMinParamLimits[4],fMaxParamLimits[4],
-      fParams[5],fMinParamLimits[5],fMaxParamLimits[5]));
-      break;
-    case kNFunctions :
-      break;
+  gROOT->ProcessLineSync(Form(".x fit_library/%s.cxx+", nameFunc[0]));
+  gROOT->ProcessLineSync(Form(".x fit_library/%s.cxx+", nameFunc[1]));
+
+  TString nameFuncSig = nameFunc[0];
+  nameFuncSig += Form("::%s(m[2,5]", nameFunc[0]);
+  for(int iPar = 0;iPar < nParams[0];iPar++){nameFuncSig += Form(",%s[%f,%f,%f]", fParamNames[iPar].Data(), fParams[iPar], fMinParamLimits[iPar], fMaxParamLimits[iPar]);}
+  nameFuncSig += ")";
+  fRooWorkspace.factory(nameFuncSig);
+
+  TString nameFuncBkg = nameFunc[1];
+  nameFuncBkg += Form("::%s(m[2,5]", nameFunc[1]);
+  for(int iPar = nParams[0];iPar < nParams[0]+nParams[1];iPar++){nameFuncBkg += Form(",%s[%f,%f,%f]", fParamNames[iPar].Data(), fParams[iPar], fMinParamLimits[iPar], fMaxParamLimits[iPar]);}
+  nameFuncBkg += ")";
+  fRooWorkspace.factory(nameFuncBkg);
+
+  TString nameFuncSigBkg = nameFunc[2];
+  nameFuncSigBkg += "::sum(";
+  for(int iPar = nParams[0]+nParams[1];iPar < nParams[0]+nParams[1]+nParams[2];iPar++){
+    if(iPar == nParams[0]+nParams[1]){nameFuncSigBkg += Form("%s[%f,%f,%f]*%s", fParamNames[iPar].Data(), fParams[iPar], fMinParamLimits[iPar], fMaxParamLimits[iPar],nameFunc[iPar-(nParams[0]+nParams[1])]);}
+    else{nameFuncSigBkg += Form(",%s[%f,%f,%f]*%s", fParamNames[iPar].Data(), fParams[iPar], fMinParamLimits[iPar], fMaxParamLimits[iPar],nameFunc[iPar-(nParams[0]+nParams[1])]);}
   }
+  nameFuncSigBkg += ")";
+  fRooWorkspace.factory(nameFuncSigBkg);
 }
 //______________________________________________________________________________
 void DQFitter::UnbinnedFitInvMassSpectrum(TString trialName) {
@@ -446,11 +389,13 @@ void DQFitter::UnbinnedFitInvMassSpectrum(TString trialName) {
   auto pdf = fRooWorkspace.pdf("sum");
 
   fRooPlot = fRooMass.frame(Title(Form("canvasFit_%s", fTrialName.Data())));
-  RooDataHist rooHist("data","data",fRooMass,Import(*fHist));
-  pdf->fitTo(rooHist);
+
+  RooDataSet rooDs("data", "data", RooArgSet(fRooMass), Import(*fTree));
+  pdf->fitTo(rooDs);
+
   auto test = fRooWorkspace.var("mean");
 
-  rooHist.plotOn(fRooPlot);
+  rooDs.plotOn(fRooPlot);
   pdf->plotOn(fRooPlot);
   pdf->paramOn(fRooPlot, Layout(0.55));
 

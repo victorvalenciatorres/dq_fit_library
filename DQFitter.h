@@ -30,25 +30,12 @@ public:
   DQFitter(TString);
   virtual ~DQFitter();
 
-  enum FitFunctionsList {
-    kFuncExp,
-    kFuncPol1,
-    kFuncPol4Exp,
-    kFuncGaus,
-    kFuncPol1Gaus,
-    kFuncExpGaus,
-    kFuncPol4ExpGaus,
-    kNFunctions
-  };
-
-  const Int_t nParameters[kNFunctions] = {2, 2, 7, 3, 5, 5, 10};
-
   void OpenOutputFile(TString pathToFile);
   void CloseOutputFile();
   void SetHistogram(TH1F* hist);
+  void SetTree(TTree *tree);
   void SetUserFunction(const char *nameFunc[3], Int_t nParams[3]);
-  void SetFunction(FitFunctionsList func);
-  void SetPDF(FitFunctionsList func);
+  void SetUserPDF(const char *nameFunc[3], Int_t nParams[3]);
   void InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams);
   void SetFitRange(Double_t minFitRange, Double_t maxFitRange);
   void SetFitMethod(TString fitMethod);
@@ -72,6 +59,9 @@ private:
   TH1F*    fHistResiduals;
   TH1F*    fHistRatio;
   TH1F*    fHistResults;
+
+  // Trees
+  TTree*   fTree;
 
   // Fitting functions
   TF1*     fFuncTot;
