@@ -2,6 +2,10 @@ void create_tutorial_dataset(){
   const double nEvents = 100000;
   const double ratioSigBkg = 0.1;
 
+  if(gSystem->GetPathInfo("tutorial",dummy1,dummy2,dummy3,dummy4) != 0){
+    gSystem->Exec(Form("mkdir -p tutorial"));
+  }
+
   // Generate a signal (gaus) + background (exponential)
   TF1 *funcBkg = new TF1("funcBkg", "expo", 0., 5.);
   funcBkg->SetParameter(0, 0.00);
