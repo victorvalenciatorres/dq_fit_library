@@ -2,14 +2,14 @@
 This class can be used to fit invariant mass distributions (signal + backgorund). To run it is necessary **ROOT6**. 
 The class contains:
 * class files: **DQFitter.cxx** and **DQFitter.h**
-* function library: **FunctionLibrary.C**
-* test macro: **run_test_fit.C**
+* function library: **fit_library/**
+* test macro: **create_tutorial_dataset.C**, **tutorial.C**
 
 The test fit code performs a simple fit of a gaussian signal and a pol0 / expo background
 
 In the root environment run with:
 * **.x DQFitter.cxx+**
-* **.x run_test_fit.C++**
+* **.x tutorial.C**
 
 An AnalysisResults.root file will be produced containing:
 * the canvas fit the histogram and the fitting functions
