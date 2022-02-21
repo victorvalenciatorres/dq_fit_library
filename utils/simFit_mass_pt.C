@@ -17,7 +17,7 @@
  // Fit MC to extract pT and mass shapes
  //-------------------------------------------------------------
 
-void create_workspace(){
+void generate_toy_sample(){
   TFile *fIn = new TFile("AllRun_HistMCDimuHFTree.root", "READ");
   TH1D *histDimuMassFromCharm  = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromCharm") ;
   TH1D *histDimuMassFromBeauty = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromBeauty") ;
@@ -97,7 +97,7 @@ void create_workspace(){
   gDirectory->Add(w);
 }
 //---------------------------------------------------------------------------------------//
- void mass_pt_simfit(){
+ void simFit_mass_pt(){
    gROOT->ProcessLineSync(".x /home/luca/GITHUB/dq_fit_library/fit_library/PtPdf.cxx+") ;
    TFile *fIn = new TFile("rooWorkspace.root");
    RooWorkspace *w = (RooWorkspace *)fIn->Get("w");
