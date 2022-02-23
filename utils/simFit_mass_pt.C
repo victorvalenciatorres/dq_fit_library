@@ -18,7 +18,7 @@
  //-------------------------------------------------------------
 
 void generate_toy_sample(){
-  TFile *fIn = new TFile("AllRun_HistMCDimuHFTree.root", "READ");
+  TFile *fIn = new TFile("data/AllRun_HistMCDimuHFTree.root", "READ");
   TH1D *histDimuMassFromCharm  = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromCharm") ;
   TH1D *histDimuMassFromBeauty = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromBeauty") ;
   TH1D *histDimuPtFromCharm  = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimupt_rec_fromCharm") ;
@@ -98,6 +98,11 @@ void generate_toy_sample(){
 }
 //---------------------------------------------------------------------------------------//
  void simFit_mass_pt(){
+   if(gSystem->AccessPathName("rooWorkspace.root")){
+     printf("Workspace does not esist! Run generate_toy_sample()\n");
+     return;
+   }
+
    gROOT->ProcessLineSync(".x ../fit_library/PtPdf.cxx+") ;
    TFile *fIn = new TFile("rooWorkspace.root");
    RooWorkspace *w = (RooWorkspace *)fIn->Get("w");
