@@ -48,7 +48,7 @@ void generate_toy_sample(){
   rooHistDimuPtFromBeauty.plotOn(frameDimuPt,MarkerStyle(24),MarkerColor(kBlue)) ;
 
   // Load pdf for the pT shape
-  gROOT->ProcessLineSync(".x /home/luca/GITHUB/dq_fit_library/fit_library/PtPdf.cxx+") ;
+  gROOT->ProcessLineSync(".x ../fit_library/PtPdf.cxx+") ;
 
   // Create pdf for dimu from charm and beauty
   RooWorkspace *w = new RooWorkspace("w", "workspace");
@@ -98,7 +98,7 @@ void generate_toy_sample(){
 }
 //---------------------------------------------------------------------------------------//
  void simFit_mass_pt(){
-   gROOT->ProcessLineSync(".x /home/luca/GITHUB/dq_fit_library/fit_library/PtPdf.cxx+") ;
+   gROOT->ProcessLineSync(".x ../fit_library/PtPdf.cxx+") ;
    TFile *fIn = new TFile("rooWorkspace.root");
    RooWorkspace *w = (RooWorkspace *)fIn->Get("w");
    w->Print();
