@@ -39,6 +39,14 @@ void generate_toy_sample(){
   RooDataHist rooHistDimuPtFromCharm("rooHistDimuPtFromCharm", "rooHistDimuPtFromCharm", pt, Import(*histDimuPtFromCharm)) ;
   RooDataHist rooHistDimuPtFromBeauty("rooHistDimuPtFromBeauty", "rooHistDimuPtFromBeauty", pt, Import(*histDimuPtFromBeauty)) ;
 
+  // Construct combinatorial background pdf
+  RooRealVar a0("a0","a0",0.5,0.,1.) ;
+  RooRealVar a1("a1","a1",0.2,0.,1.) ;
+  RooChebychev *pdfDimuMassCombBkg = new RooChebychev("pdfDimuMassCombBkg","pdfDimuMassCombBkg",m,RooArgSet(a0,a1)) ;
+
+  RooRealVar lambda("lambda","lambda",-1.,-2,1) ;
+  RooExponential *pdfDimuPtCombBkg = new RooExponential("pdfDimuPtCombBkg","pdfDimuPtCombBkg",pt,lambda) ;
+
   RooPlot *frameDimuMass = m.frame(Title("Dimu mass distribution")) ;
   rooHistDimuMassFromCharm.plotOn(frameDimuMass,MarkerStyle(24),MarkerColor(kRed)) ;
   rooHistDimuMassFromBeauty.plotOn(frameDimuMass,MarkerStyle(24),MarkerColor(kBlue)) ;
@@ -77,16 +85,24 @@ void generate_toy_sample(){
   // Generate the toy samples
   RooDataSet *dataDimuMassFromCharmAndBeauty = pdfDimuMassFromCharm->generate(m,10000) ;
   RooDataSet *dataDimuMassFromBeauty = pdfDimuMassFromBeauty->generate(m,1000) ;
+  RooDataSet *dataDimuMassCombBkg = pdfDimuMassCombBkg->generate(m,2000) ;
 
   RooDataSet *dataDimuPtFromCharmAndBeauty = pdfDimuPtFromCharm->generate(pt,10000) ;
   RooDataSet *dataDimuPtFromBeauty = pdfDimuPtFromBeauty->generate(pt,1000) ;
+  RooDataSet *dataDimuPtCombBkg = pdfDimuPtCombBkg->generate(pt,2000) ;
 
   // Sum the samples from b and c
   dataDimuMassFromCharmAndBeauty->append(*dataDimuMassFromBeauty);
+  dataDimuMassFromCharmAndBeauty->append(*dataDimuMassCombBkg);
+
   dataDimuPtFromCharmAndBeauty->append(*dataDimuPtFromBeauty);
+  dataDimuPtFromCharmAndBeauty->append(*dataDimuPtCombBkg);
 
   w->import(*dataDimuMassFromCharmAndBeauty);
   w->import(*dataDimuPtFromCharmAndBeauty);
+
+  w->import(*pdfDimuMassCombBkg);
+  w->import(*pdfDimuPtCombBkg);
 
   TCanvas* canvas = new TCanvas("canvas","canvas",1200,600) ;
   canvas->Divide(2,1);
@@ -128,16 +144,19 @@ void generate_toy_sample(){
 
    RooAbsPdf *pdfDimuMassFromCharm = w->pdf("pdfDimuMassFromCharm");
    RooAbsPdf *pdfDimuMassFromBeauty = w->pdf("pdfDimuMassFromBeauty");
+   RooAbsPdf *pdfDimuMassCombBkg = w->pdf("pdfDimuMassCombBkg");
    RooAbsPdf *pdfDimuPtFromCharm = w->pdf("pdfDimuPtFromCharm");
    RooAbsPdf *pdfDimuPtFromBeauty = w->pdf("pdfDimuPtFromBeauty");
+   RooAbsPdf *pdfDimuPtCombBkg = w->pdf("pdfDimuPtCombBkg");
 
    // Define the normalization from charm and beauty spectra
    RooRealVar nDimuFromC("nDimuFromC","number dimuon from c",10000,0,2000000) ;
    RooRealVar nDimuFromB("nDimuFromB","number dimuon from b",10000,0,2000000) ;
+   RooRealVar nDimuCombBkg("nDimuCombBkg","number dimuon from comb. bkg.",10000,0,2000000) ;
 
    // Define the model as sum of charm and beauty
-   RooAddPdf  m_model("m_model","dimuMassFromC + dimuMassFromB",RooArgList(*pdfDimuMassFromCharm,*pdfDimuMassFromBeauty),RooArgList(nDimuFromC,nDimuFromB)) ;
-   RooAddPdf  pt_model("pt_model","dimuPtFromC + dimuPtFromB",RooArgList(*pdfDimuPtFromCharm,*pdfDimuPtFromBeauty),RooArgList(nDimuFromC,nDimuFromB)) ;
+   RooAddPdf  m_model("m_model","dimuMassFromC + dimuMassFromB + dimuMassCombBkg",RooArgList(*pdfDimuMassFromCharm,*pdfDimuMassFromBeauty,*pdfDimuMassCombBkg),RooArgList(nDimuFromC,nDimuFromB,nDimuCombBkg)) ;
+   RooAddPdf  pt_model("pt_model","dimuPtFromC + dimuPtFromB + dimuPtCombBkg",RooArgList(*pdfDimuPtFromCharm,*pdfDimuPtFromBeauty,*pdfDimuPtCombBkg),RooArgList(nDimuFromC,nDimuFromB,nDimuCombBkg)) ;
 
    RooDataSet *dataDimuMassFromCharmAndBeauty = (RooDataSet*) w->data("pdfDimuMassFromCharmData");
    RooDataSet *dataDimuPtFromCharmAndBeauty = (RooDataSet*) w->data("pdfDimuPtFromCharmData");
@@ -159,12 +178,14 @@ void generate_toy_sample(){
    simPdf.plotOn(m_frame,Slice(sample,"mass"),ProjWData(sample,*combData),LineStyle(kSolid),LineColor(kRed)) ;
    simPdf.plotOn(m_frame,Slice(sample,"mass"),Components("pdfDimuMassFromCharm"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kOrange+7)) ;
    simPdf.plotOn(m_frame,Slice(sample,"mass"),Components("pdfDimuMassFromBeauty"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kAzure+7)) ;
+   simPdf.plotOn(m_frame,Slice(sample,"mass"),Components("pdfDimuMassCombBkg"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kMagenta)) ;
 
    RooPlot *pt_frame = pt->frame(Title("Transverse momentum distribution")) ;
    combData->plotOn(pt_frame,Cut("sample==sample::transversemomentum")) ;
    simPdf.plotOn(pt_frame,Slice(sample,"transversemomentum"),ProjWData(sample,*combData),LineStyle(kSolid),LineColor(kRed)) ;
    simPdf.plotOn(pt_frame,Slice(sample,"transversemomentum"),Components("pdfDimuPtFromCharm"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kOrange+7)) ;
    simPdf.plotOn(pt_frame,Slice(sample,"transversemomentum"),Components("pdfDimuPtFromBeauty"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kAzure+7)) ;
+   simPdf.plotOn(pt_frame,Slice(sample,"transversemomentum"),Components("pdfDimuPtCombBkg"),ProjWData(sample,*combData),LineStyle(kDashed),LineColor(kMagenta)) ;
 
    // Plot fit parameters
    simPdf.paramOn(pt_frame, Layout(0.35));
