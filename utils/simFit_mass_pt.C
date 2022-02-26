@@ -17,7 +17,7 @@
  // Fit MC to extract pT and mass shapes
  //-------------------------------------------------------------
 
-void generate_toy_sample(){
+void generate_toy_sample(Int_t nDimuFromC = 1000, Int_t nDimuFromB = 100, Int_t nDimuCombBkg = 200){
   TFile *fIn = new TFile("data/AllRun_HistMCDimuHFTree.root", "READ");
   TH1D *histDimuMassFromCharm  = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromCharm") ;
   TH1D *histDimuMassFromBeauty = (TH1D*) fIn -> Get("dimu_masscut0/dimu_rec/ULS_h_dimumass_rec_fromBeauty") ;
@@ -40,18 +40,18 @@ void generate_toy_sample(){
   RooDataHist rooHistDimuPtFromBeauty("rooHistDimuPtFromBeauty", "rooHistDimuPtFromBeauty", pt, Import(*histDimuPtFromBeauty)) ;
 
   // Construct combinatorial background pdf
-  RooRealVar a0("a0","a0",0.5,0.,1.) ;
-  RooRealVar a1("a1","a1",0.2,0.,1.) ;
-  RooChebychev *pdfDimuMassCombBkg = new RooChebychev("pdfDimuMassCombBkg","pdfDimuMassCombBkg",m,RooArgSet(a0,a1)) ;
+  RooRealVar a0("a0","a0",-0.5,0.,1.) ;
+  RooRealVar a1("a1","a1",-0.2,0.,1.) ;
+  RooChebychev *pdfDimuMassCombBkg = new RooChebychev("pdfDimuMassCombBkg","pdfDimuMassCombBkg", m, RooArgSet(a0,a1)) ;
 
   RooRealVar lambda("lambda","lambda",-1.,-2,1) ;
-  RooExponential *pdfDimuPtCombBkg = new RooExponential("pdfDimuPtCombBkg","pdfDimuPtCombBkg",pt,lambda) ;
+  RooExponential *pdfDimuPtCombBkg = new RooExponential("pdfDimuPtCombBkg","pdfDimuPtCombBkg", pt, lambda) ;
 
-  RooPlot *frameDimuMass = m.frame(Title("Dimu mass distribution")) ;
+  RooPlot *frameDimuMass = m.frame(Title("Dimu mass pdf")) ;
   rooHistDimuMassFromCharm.plotOn(frameDimuMass,MarkerStyle(24),MarkerColor(kRed)) ;
   rooHistDimuMassFromBeauty.plotOn(frameDimuMass,MarkerStyle(24),MarkerColor(kBlue)) ;
 
-  RooPlot *frameDimuPt = pt.frame(Title("Dimu #it{p}_{T} distribution")) ;
+  RooPlot *frameDimuPt = pt.frame(Title("Dimu #it{p}_{T} pdf")) ;
   rooHistDimuPtFromCharm.plotOn(frameDimuPt,MarkerStyle(24),MarkerColor(kRed)) ;
   rooHistDimuPtFromBeauty.plotOn(frameDimuPt,MarkerStyle(24),MarkerColor(kBlue)) ;
 
@@ -68,28 +68,31 @@ void generate_toy_sample(){
 
   auto pdfDimuMassFromCharm = w->pdf("pdfDimuMassFromCharm");
   pdfDimuMassFromCharm->fitTo(rooHistDimuMassFromCharm) ;
-  pdfDimuMassFromCharm->plotOn(frameDimuMass,LineStyle(kSolid),LineColor(kRed)) ;
+  pdfDimuMassFromCharm->plotOn(frameDimuMass,Name("pdfDimuMassFromCharm"),LineStyle(kSolid),LineColor(kRed)) ;
 
   auto pdfDimuPtFromCharm = w->pdf("pdfDimuPtFromCharm");
   pdfDimuPtFromCharm->fitTo(rooHistDimuPtFromCharm) ;
-  pdfDimuPtFromCharm->plotOn(frameDimuPt,LineStyle(kSolid),LineColor(kRed)) ;
+  pdfDimuPtFromCharm->plotOn(frameDimuPt,Name("pdfDimuPtFromCharm"),LineStyle(kSolid),LineColor(kRed)) ;
 
   auto pdfDimuMassFromBeauty = w->pdf("pdfDimuMassFromBeauty");
   pdfDimuMassFromBeauty->fitTo(rooHistDimuMassFromBeauty) ;
-  pdfDimuMassFromBeauty->plotOn(frameDimuMass,LineStyle(kSolid),LineColor(kBlue)) ;
+  pdfDimuMassFromBeauty->plotOn(frameDimuMass,Name("pdfDimuMassFromBeauty"),LineStyle(kSolid),LineColor(kBlue)) ;
+  pdfDimuMassCombBkg->plotOn(frameDimuMass,Name("pdfDimuMassCombBkg"),LineStyle(kSolid),LineColor(kMagenta)) ;
+
 
   auto pdfDimuPtFromBeauty = w->pdf("pdfDimuPtFromBeauty");
   pdfDimuPtFromBeauty->fitTo(rooHistDimuPtFromBeauty) ;
-  pdfDimuPtFromBeauty->plotOn(frameDimuPt,LineStyle(kSolid),LineColor(kBlue)) ;
+  pdfDimuPtFromBeauty->plotOn(frameDimuPt,Name("pdfDimuPtFromBeauty"),LineStyle(kSolid),LineColor(kBlue)) ;
+  pdfDimuPtCombBkg->plotOn(frameDimuPt,Name("pdfDimuPtCombBkg"),LineStyle(kSolid),LineColor(kMagenta)) ;
 
   // Generate the toy samples
-  RooDataSet *dataDimuMassFromCharmAndBeauty = pdfDimuMassFromCharm->generate(m,10000) ;
-  RooDataSet *dataDimuMassFromBeauty = pdfDimuMassFromBeauty->generate(m,1000) ;
-  RooDataSet *dataDimuMassCombBkg = pdfDimuMassCombBkg->generate(m,2000) ;
+  RooDataSet *dataDimuMassFromCharmAndBeauty = pdfDimuMassFromCharm->generate(m,nDimuFromC) ;
+  RooDataSet *dataDimuMassFromBeauty = pdfDimuMassFromBeauty->generate(m,nDimuFromB) ;
+  RooDataSet *dataDimuMassCombBkg = pdfDimuMassCombBkg->generate(m,nDimuCombBkg) ;
 
-  RooDataSet *dataDimuPtFromCharmAndBeauty = pdfDimuPtFromCharm->generate(pt,10000) ;
-  RooDataSet *dataDimuPtFromBeauty = pdfDimuPtFromBeauty->generate(pt,1000) ;
-  RooDataSet *dataDimuPtCombBkg = pdfDimuPtCombBkg->generate(pt,2000) ;
+  RooDataSet *dataDimuPtFromCharmAndBeauty = pdfDimuPtFromCharm->generate(pt,nDimuFromC) ;
+  RooDataSet *dataDimuPtFromBeauty = pdfDimuPtFromBeauty->generate(pt,nDimuFromB) ;
+  RooDataSet *dataDimuPtCombBkg = pdfDimuPtCombBkg->generate(pt,nDimuCombBkg) ;
 
   // Sum the samples from b and c
   dataDimuMassFromCharmAndBeauty->append(*dataDimuMassFromBeauty);
@@ -98,16 +101,40 @@ void generate_toy_sample(){
   dataDimuPtFromCharmAndBeauty->append(*dataDimuPtFromBeauty);
   dataDimuPtFromCharmAndBeauty->append(*dataDimuPtCombBkg);
 
+  RooPlot *frameDimuMassData = m.frame(Title("Dimu mass distribution toy data")) ;
+  dataDimuMassFromCharmAndBeauty->plotOn(frameDimuMassData) ;
+
+  RooPlot *frameDimuPtData = pt.frame(Title("Dimu #it{p}_{T} distribution toy data")) ;
+  dataDimuPtFromCharmAndBeauty->plotOn(frameDimuPtData) ;
+
   w->import(*dataDimuMassFromCharmAndBeauty);
   w->import(*dataDimuPtFromCharmAndBeauty);
 
   w->import(*pdfDimuMassCombBkg);
   w->import(*pdfDimuPtCombBkg);
 
-  TCanvas* canvas = new TCanvas("canvas","canvas",1200,600) ;
-  canvas->Divide(2,1);
-  canvas->cd(1) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuMass->GetYaxis()->SetTitleOffset(1.4) ; frameDimuMass->Draw() ;
-  canvas->cd(2) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuPt->GetYaxis()->SetTitleOffset(1.4) ; frameDimuPt->Draw() ;
+  TCanvas* canvasFit = new TCanvas("canvasFit","canvasFit",1200,600) ;
+  canvasFit->Divide(2,1);
+  canvasFit->cd(1) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuMass->GetYaxis()->SetTitleOffset(1.4) ; frameDimuMass->Draw() ;
+  canvasFit->cd(2) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuPt->GetYaxis()->SetTitleOffset(1.4) ; frameDimuPt->Draw() ;
+
+  TLegend *legend = new TLegend(0.55,0.68,0.75,0.88," ","brNDC") ;
+  legend->SetBorderSize(0) ;
+  legend->SetFillColor(10) ;
+  legend->SetFillStyle(1) ;
+  legend->SetLineStyle(0) ;
+  legend->SetLineColor(0) ;
+  legend->SetTextFont(42) ;
+  legend->SetTextSize(0.04) ;
+  legend->AddEntry("pdfDimuPtFromCharm", "#mu^{+}#mu^{-} #leftarrow #it{c}", "L") ;
+  legend->AddEntry("pdfDimuPtFromBeauty", "#mu^{+}#mu^{-} #leftarrow #it{b}", "L") ;
+  legend->AddEntry("pdfDimuPtCombBkg", "Comb. bkg", "L") ;
+  legend->Draw() ;
+
+  TCanvas* canvasData = new TCanvas("canvasData","canvasData",1200,600) ;
+  canvasData->Divide(2,1);
+  canvasData->cd(1) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuMassData->GetYaxis()->SetTitleOffset(1.4) ; frameDimuMassData->Draw() ;
+  canvasData->cd(2) ; gPad->SetLogy(1) ; gPad->SetLeftMargin(0.15) ; frameDimuPtData->GetYaxis()->SetTitleOffset(1.4) ; frameDimuPtData->Draw() ;
 
   w->writeToFile("rooWorkspace.root");
   gDirectory->Add(w);
