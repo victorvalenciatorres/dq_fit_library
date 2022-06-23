@@ -32,7 +32,7 @@ void create_tutorial_dataset(){
   funcPtSig->SetParameter(2, 2.81);
   funcPtSig->SetParameter(3, 2.43);
 
-  TFile *fOutHist = new TFile("tutorial/hist_2D.root", "RECREATE");
+  TFile *fOutHist = new TFile("tutorial/hist.root", "RECREATE");
 
   TH1F *histMass = new TH1F("histMass", "histMass", 100, 0., 5.);
   histMass->FillRandom("funcMassBkg", (int) nEvents - (nEvents*ratioSigBkg));
@@ -47,23 +47,20 @@ void create_tutorial_dataset(){
   fOutHist -> Close();
 
   // Fill the tree
-  TFile *fOutTree = new TFile("tutorial/tree_2D.root", "RECREATE");
+  TFile *fOutTree = new TFile("tutorial/tree.root", "RECREATE");
 
   Double_t m, pT;
   Double_t seed;
 
   TTree *tree = new TTree("data", "data");
   tree->Branch("m", &m, "m/D");
-  tree->Branch("pT", &pT, "pT/D");
 
   for(int iEvent = 0;iEvent < nEvents;iEvent++){
     seed = gRandom->Rndm();
     if(seed > ratioSigBkg){
       m  = funcMassBkg->GetRandom();
-      pT = funcPtBkg->GetRandom();
     } else {
       m  = funcMassSig->GetRandom();
-      //pT = funcPtSig->GetRandom();
     }
     tree->Fill();
   }

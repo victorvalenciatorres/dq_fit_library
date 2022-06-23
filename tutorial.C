@@ -69,7 +69,7 @@ void tutorial(){
   // Test with standard binned root fit
   //////////////////////////////////////////////////////////////////////////////
   TFile *fInHist = new TFile("tutorial/hist.root", "READ");
-  TH1F *hist = (TH1F*) fInHist->Get("hist");
+  TH1F *hist = (TH1F*) fInHist->Get("histMass");
 
   Double_t    paramValues[] = {100.,   -0.1,   1000.,  3.,     0.07};
   Double_t minParamLimits[] = {0,      -0.2,   0,      2.,     0.};

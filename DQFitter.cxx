@@ -99,7 +99,7 @@ void DQFitter::CloseOutputFile() {
   }
 }
 //______________________________________________________________________________
-void DQFitter::SetHistogram(TH1F *hist) {
+extern "C" void DQFitter::SetHistogram(TH1F *hist) {
   fHist = hist;
   fHist->GetYaxis()->SetRangeUser(0., 2.*fHist->GetMaximum());
 }
@@ -108,7 +108,7 @@ void DQFitter::SetTree(TTree *tree) {
   fTree = tree;
 }
 //______________________________________________________________________________
-void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
+extern "C" void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
   // WARNING --> To see the function and the fit superimposed you need to load UserFunctions.cxx
   fFuncSig = new TF1("fFuncSig", nameFunc[0], -100., 100., nParams[0]);
   fNParSig = nParams[0];
@@ -117,16 +117,16 @@ void DQFitter::SetUserFunction(const char *nameFunc[3], Int_t nParams[3]) {
   fFuncTot = new TF1("fFuncTot", nameFunc[2], -100., 100., nParams[2]);
 }
 //______________________________________________________________________________
-void DQFitter::SetFitRange(Double_t minFitRange, Double_t maxFitRange) {
+extern "C" void DQFitter::SetFitRange(Double_t minFitRange, Double_t maxFitRange) {
   fMinFitRange = minFitRange;
   fMaxFitRange = maxFitRange;
 }
 //______________________________________________________________________________
-void DQFitter::SetFitMethod(TString fitMethod) {
+extern "C" void DQFitter::SetFitMethod(TString fitMethod) {
   fFitMethod = fitMethod;
 }
 //______________________________________________________________________________
-void DQFitter::InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams) {
+extern "C" void DQFitter::InitParameters(Int_t nParams, Double_t *params, Double_t *minParamLimits, Double_t *maxParamLimits, TString *nameParams) {
   fNParams = nParams;
   fParams = params;
   fMinParamLimits = minParamLimits;
@@ -134,7 +134,7 @@ void DQFitter::InitParameters(Int_t nParams, Double_t *params, Double_t *minPara
   fParamNames = nameParams;
 }
 //______________________________________________________________________________
-void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
+extern "C" void DQFitter::BinnedFitInvMassSpectrum(TString trialName) {
   fTrialName = trialName;
 
   // Set/Fix the function parameters
