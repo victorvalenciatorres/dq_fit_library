@@ -107,13 +107,18 @@ void tutorial(){
   TFile *fInTree = new TFile("tutorial/tree.root", "READ");
   TTree *tree = (TTree*) fInTree->Get("data");
 
-  Double_t    rooParamValues[] = {3.1,    0.07,    0.1,  2,  1000,   100000};
+  /*Double_t    rooParamValues[] = {3.1,    0.07,    0.1,  2,  1000,   100000};
   Double_t rooMinParamLimits[] = {2,      0,       0,   -10, 0,      0};
   Double_t rooMaxParamLimits[] = {4,      0.2,     0.2,  10, 50000,  500000};
-  TString  rooNameParameters[] = {"mean", "width", "a", "b", "nsig", "nbkg"};
+  TString  rooNameParameters[] = {"mean", "width", "a", "b", "nsig", "nbkg"};*/
 
-  const char *nameUserPDF[3] = {"GausPdf", "ExpPdf", "SUM"};
-  Int_t nParamsUserPDF[3] = {2, 2, 2};
+  Double_t    rooParamValues[] = {3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694, 1., 1, 1., 1000,   100000};
+  Double_t rooMinParamLimits[] = {2.9, 7.0e-02, 1.0889, 3.3929, 2.096, 8.693, -10., 0, -100, 0, 0};
+  Double_t rooMaxParamLimits[] = {3.5, 1.9e-01, 1.0891, 3.3931, 2.096, 8.695, +10., 100, 100, 50000,  500000};
+  TString  rooNameParameters[] = {"mean", "width", "a", "b", "c", "d", "aa", "bb", "cc", "norm1", "norm2"};
+
+  const char *nameUserPDF[3] = {"CB2Pdf", "VWGPdf", "SUM"};
+  Int_t nParamsUserPDF[3] = {6, 3, 2};
 
   // Create a DQFitter object and open the file where results will be saved
   DQFitter dq_fitter_unbinned(Form("%s/tutorial_roofit_fitter.root", outputDirName.Data()));
