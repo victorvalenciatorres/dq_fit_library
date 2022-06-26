@@ -98,15 +98,36 @@ class DQFitter:
         pdf.plotOn(fRooPlot)
         pdf.paramOn(fRooPlot, ROOT.RooFit.Layout(0.55))
 
-        canvasFit = TCanvas("canvasFit_{}".format(trialName), "canvasFit_{}".format(trialName), 600, 600)
+        # Fit plot
+        canvasFit = TCanvas("canvasFit", "canvasFit", 600, 600)
         canvasFit.SetLeftMargin(0.15)
         gPad.SetLeftMargin(0.15)
         fRooPlot.GetYaxis().SetTitleOffset(1.4)
         fRooPlot.Draw()
 
+        # Ratio plot
+        rooHistRatio = fRooPlot.residHist()
+        rooPlotRatio = self.fRooMass.frame(ROOT.RooFit.Title("Residual Distribution"))
+        rooPlotRatio.addPlotable(rooHistRatio,"P")
+        canvasRatio = TCanvas("canvasRatio", "canvasRatio", 600, 600)
+        canvasRatio.SetLeftMargin(0.15)
+        rooPlotRatio.GetYaxis().SetTitleOffset(1.4)
+        rooPlotRatio.Draw()
+
+        # Pull plot
+        rooHistPull = fRooPlot.pullHist()
+        rooPlotPull = self.fRooMass.frame(ROOT.RooFit.Title("Pull Distribution"))
+        rooPlotPull.addPlotable(rooHistPull,"P")
+        canvasPull = TCanvas("canvasPull", "canvasPull", 600, 600)
+        canvasPull.SetLeftMargin(0.15)
+        rooPlotPull.GetYaxis().SetTitleOffset(1.4)
+        rooPlotPull.Draw()
+
         self.fFileOut.cd()
-        canvasFit.Write()
-        histResults.Write()
+        canvasFit.Write("fit_plot_{}".format(trialName))
+        canvasRatio.Write("ratio_plot_{}".format(trialName))
+        canvasPull.Write("pull_plot_{}".format(trialName))
+        histResults.Write("fit_results_{}".format(trialName))
 
     
     def MultiTrial(self):
