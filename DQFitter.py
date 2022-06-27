@@ -25,10 +25,8 @@ class DQFitter:
         self.fParNames         = []
         self.fFitRangeMin      = []
         self.fFitRangeMax      = []
+        self.fTrialName        = ""
         self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5)
-        self.fMaxFitIterations = 100
-        self.fFitMethod        = "SRL"
-        self.fFitStatus        = "Undefined"
 
     def SetFitConfig(self, pdfDict):
         '''
@@ -39,6 +37,9 @@ class DQFitter:
         self.fFitRangeMax = pdfDict["fitRangeMax"]
 
         pdfList = []
+        for pdf in self.fPdfDict["pdf"][:-1]:
+            self.fTrialName = self.fTrialName + pdf + "_"
+
         for i in range(0, len(self.fPdfDict["pdf"])):
             parVal = self.fPdfDict["parVal"][i]
             parLimMin = self.fPdfDict["parLimMin"][i]
@@ -70,10 +71,11 @@ class DQFitter:
                 print(nameFunc)
                 self.fRooWorkspace.factory(nameFunc)
 
-    def FitInvMassSpectrum(self, trialName, fitRangeMin, fitRangeMax):
+    def FitInvMassSpectrum(self, fitRangeMin, fitRangeMax):
         '''
         Method to perform unbinned fit to a ROOT TTree
         '''
+        trialName = self.fTrialName + "_" + str(fitRangeMin) + "_" + str(fitRangeMax)
         self.fRooWorkspace.Print()
         pdf = self.fRooWorkspace.pdf("sum")
         self.fRooMass.setRange("range", fitRangeMin, fitRangeMax)
@@ -87,7 +89,7 @@ class DQFitter:
         pdf.fitTo(rooDs)
 
         index = 1
-        histResults = TH1F("histResults", "", len(self.fParNames), 0., len(self.fParNames))
+        histResults = TH1F("fit_results_{}".format(trialName), "fit_results_{}".format(trialName), len(self.fParNames), 0., len(self.fParNames))
         for parName in self.fParNames:
             histResults.GetXaxis().SetBinLabel(index, parName)
             histResults.SetBinContent(index, self.fRooWorkspace.var(parName).getVal())
@@ -99,7 +101,7 @@ class DQFitter:
         pdf.paramOn(fRooPlot, ROOT.RooFit.Layout(0.55))
 
         # Fit plot
-        canvasFit = TCanvas("canvasFit", "canvasFit", 600, 600)
+        canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 600, 600)
         canvasFit.SetLeftMargin(0.15)
         gPad.SetLeftMargin(0.15)
         fRooPlot.GetYaxis().SetTitleOffset(1.4)
@@ -109,7 +111,7 @@ class DQFitter:
         rooHistRatio = fRooPlot.residHist()
         rooPlotRatio = self.fRooMass.frame(ROOT.RooFit.Title("Residual Distribution"))
         rooPlotRatio.addPlotable(rooHistRatio,"P")
-        canvasRatio = TCanvas("canvasRatio", "canvasRatio", 600, 600)
+        canvasRatio = TCanvas("ratio_plot_{}".format(trialName), "ratio_plot_{}".format(trialName), 600, 600)
         canvasRatio.SetLeftMargin(0.15)
         rooPlotRatio.GetYaxis().SetTitleOffset(1.4)
         rooPlotRatio.Draw()
@@ -118,19 +120,20 @@ class DQFitter:
         rooHistPull = fRooPlot.pullHist()
         rooPlotPull = self.fRooMass.frame(ROOT.RooFit.Title("Pull Distribution"))
         rooPlotPull.addPlotable(rooHistPull,"P")
-        canvasPull = TCanvas("canvasPull", "canvasPull", 600, 600)
+        canvasPull = TCanvas("pull_plot_{}".format(trialName), "pull_plot_{}".format(trialName), 600, 600)
         canvasPull.SetLeftMargin(0.15)
         rooPlotPull.GetYaxis().SetTitleOffset(1.4)
         rooPlotPull.Draw()
 
+        # Save results
         self.fFileOut.cd()
-        canvasFit.Write("fit_plot_{}".format(trialName))
-        canvasRatio.Write("ratio_plot_{}".format(trialName))
-        canvasPull.Write("pull_plot_{}".format(trialName))
-        histResults.Write("fit_results_{}".format(trialName))
+        canvasFit.Write()
+        canvasRatio.Write()
+        canvasPull.Write()
+        histResults.Write()
 
     
     def MultiTrial(self):
         for iRange in range(0, len(self.fFitRangeMin)):
-            self.FitInvMassSpectrum("trial_{}_{}".format(self.fFitRangeMin[iRange], self.fFitRangeMax[iRange]), self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
+            self.FitInvMassSpectrum(self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
         self.fFileOut.Close()

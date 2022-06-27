@@ -11,8 +11,11 @@ import sys
 import argparse
 import os
 from os import path
+from ROOT import TFile
 sys.path.append('../')
 from DQFitter import DQFitter
+sys.path.append('../utils')
+from utils_library import DoSystematics
 
 def main():
     parser = argparse.ArgumentParser(description='Arguments to pass')
@@ -32,5 +35,8 @@ def main():
         dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"])
         dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
         dqFitter.MultiTrial()
+
+    fIn = TFile.Open("FitResults.root")
+    DoSystematics(fIn, "sig")
 
 main()
