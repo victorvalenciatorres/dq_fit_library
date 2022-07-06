@@ -9,12 +9,12 @@ from os import path
 from ROOT import TCanvas, TF1, TFile, TPaveText, TMath, TH1F, TString, TLegend, TRatioPlot, TGaxis
 from ROOT import gROOT, gBenchmark, gPad, gStyle, kTRUE, kFALSE
 
-def Set_Latex(latex):
+def SetLatex(latex):
     latex.SetTextSize(0.035)
     latex.SetNDC()
     latex.SetTextFont(42)
 
-def Set_Legend(legend):
+def SetLegend(legend):
     legend.SetBorderSize(0)
     legend.SetFillColor(10)
     legend.SetFillStyle(1)
@@ -23,7 +23,7 @@ def Set_Legend(legend):
     legend.SetTextFont(42)
     legend.SetTextSize(0.03)
 
-def Load_Style():
+def LoadStyle():
     font = 42
     TGaxis.SetMaxDigits(2)
     gStyle.SetFrameBorderMode(0)
@@ -54,8 +54,7 @@ def Load_Style():
     gStyle.SetTitleOffset(1.02,"y")
     gStyle.SetTitleSize(0.04,"xyz")
     gStyle.SetMarkerSize(0.5)
-    #gStyle.SetOptStat("e")
-    gStyle.SetOptFit(1)
+    gStyle.SetOptFit(0)
     gStyle.SetEndErrorSize(0)
     gStyle.SetCanvasPreferGL(kTRUE)
     gStyle.SetHatchesSpacing(0.5)
@@ -75,7 +74,7 @@ def Load_Style():
     gStyle.SetPadTickX(1)
     gStyle.SetPadTickY(1)
 
-def Draw_Ratio_Plot(hist1, hist2, dirName, plotName):
+def DrawRatioPlot(hist1, hist2, dirName, plotName):
     gStyle.SetOptStat(0)
     canvas = TCanvas("canvas", "A ratio example")
     ratioPlot = TRatioPlot(hist1, hist2)

@@ -10,9 +10,9 @@ import ROOT
 from os import path
 from ROOT import TGraphErrors, TCanvas, TF1, TFile, TPaveText, TMath, TH1F, TH2F, TString, TLegend, TRatioPlot, TGaxis, TLine, TLatex
 from ROOT import gROOT, gBenchmark, gPad, gStyle, kTRUE, kFALSE, kBlack, kRed, kDashed
-from plot_library import Load_Style, Set_Latex
+from plot_library import LoadStyle, SetLatex
 
-def Store_Histograms_From_File(fIn, histType):
+def StoreHistogramsFromFile(fIn, histType):
     '''
     Method which returns all the histograms of a certain class from a given file
     '''
@@ -36,7 +36,7 @@ def DoSystematics(fIn, parName):
     '''
     Method to evaluate the systematic errors from signal extraction
     '''
-    Load_Style()
+    LoadStyle()
     gStyle.SetOptStat(0)
     gStyle.SetOptFit(0)
     nameTrialArray = []
@@ -87,7 +87,7 @@ def DoSystematics(fIn, parName):
     lineParStatDown.SetLineColor(kRed)
 
     latexTitle = TLatex()
-    Set_Latex(latexTitle)
+    SetLatex(latexTitle)
 
     canvasParVal = TCanvas("canvasParVal", "canvasParVal", 800, 600)
     histGrid = TH2F("histGrid", "", len(parValArray), 0, len(parValArray), 100, 0, 2 * max(parValArray))

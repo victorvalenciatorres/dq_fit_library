@@ -1,5 +1,5 @@
 input:
-  input_file_name: "../tutorial/tree.root"
+  input_file_name: "tutorial.root"
   input_name: "data"
   pdf_dictionary: {
         "pdf": ["CB2", "VWG", "SUM"],

@@ -1,19 +1,6 @@
-from ast import parse
-from queue import PriorityQueue
-from time import process_time_ns
-from tkinter import Canvas
-from turtle import color, right
-import matplotlib.pyplot as plt
-import array as arr
-import numpy as np
-import os
-from os import path
-import sys
-import argparse
 import ROOT
-from ROOT import TCanvas, TFile, TF1, TH1F, RooRealVar, RooDataSet, RooWorkspace, RooAddPdf, RooExtendPdf, RooPlot, RooHist, RooDataHist, RooArgSet
-from ROOT import gStyle, gPad, kBlack, gROOT, gSystem
-
+from ROOT import TCanvas, TFile, TH1F, RooRealVar, RooDataSet, RooWorkspace, RooDataHist, RooArgSet
+from ROOT import gPad, gROOT
 
 class DQFitter:
     def __init__(self, fInName, fInputName):
