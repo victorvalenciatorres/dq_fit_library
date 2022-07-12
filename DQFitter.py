@@ -15,10 +15,7 @@ class DQFitter:
         self.fTrialName        = ""
         self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5)
 
-    def SetFitConfig(self, pdfDict):
-        '''
-        Method to set the fit PDFs
-        '''
+    def TestConfig(self, pdfDict):
         self.fPdfDict = pdfDict
         self.fFitRangeMin = pdfDict["fitRangeMin"]
         self.fFitRangeMax = pdfDict["fitRangeMax"]
@@ -26,7 +23,11 @@ class DQFitter:
         pdfList = []
         for pdf in self.fPdfDict["pdf"][:-1]:
             self.fTrialName = self.fTrialName + pdf + "_"
-
+        
+        for i in range(0, len(self.fPdfDict["pdf"])):
+            if not self.fPdfDict["pdf"][i] == "SUM":
+                gROOT.ProcessLineSync(".x ../fit_library/{}Pdf.cxx+".format(self.fPdfDict["pdf"][i]))
+        
         for i in range(0, len(self.fPdfDict["pdf"])):
             parVal = self.fPdfDict["parVal"][i]
             parLimMin = self.fPdfDict["parLimMin"][i]
@@ -34,16 +35,26 @@ class DQFitter:
             parName = self.fPdfDict["parName"][i]
 
             if not self.fPdfDict["pdf"][i] == "SUM":
-                gROOT.ProcessLineSync(".x ../fit_library/{}Pdf.cxx+".format(self.fPdfDict["pdf"][i]))
+                # Filling parameter list
+                for j in range(0, len(parVal)):
+                    if "sum" in parName[j]:
+                        self.fRooWorkspace.factory("{}".format(parName[j]))
+                        # Replace the exression of the parameter with the name of the parameter
+                        r1 = parName[j].find("::") + 2
+                        r2 = parName[j].find("(", r1)
+                        parName[j] = parName[j][r1:r2]
+                    else:
+                        self.fRooWorkspace.factory("{}[{},{},{}]".format(parName[j], parVal[j], parLimMin[j], parLimMax[j]))
+                        self.fParNames.append(parName[j]) # only free parameters will be reported in the histogram of results
+
+                # Define the pdf associating the parametes previously defined
                 nameFunc = self.fPdfDict["pdf"][i]
-                nameFunc += "Pdf::{}Pdf(m[2,5]".format(self.fPdfDict["pdf"][i])
-                pdfList.append(self.fPdfDict["pdf"][i])
+                nameFunc += "Pdf::{}Pdf(m[2,5]".format(self.fPdfDict["pdfName"][i])
+                pdfList.append(self.fPdfDict["pdfName"][i])
 
                 for j in range(0, len(parVal)):
-                    nameFunc += ",{}[{},{},{}]".format(parName[j], parVal[j], parLimMin[j], parLimMax[j])
-                    self.fParNames.append(parName[j])
+                    nameFunc += ",{}".format(parName[j])
                 nameFunc += ")"
-                print(nameFunc)
                 self.fRooWorkspace.factory(nameFunc)
             else:
                 nameFunc = self.fPdfDict["pdf"][i]
@@ -55,8 +66,9 @@ class DQFitter:
                     if not j == len(pdfList) - 1:
                         nameFunc += ","
                 nameFunc += ")"
-                print(nameFunc)
                 self.fRooWorkspace.factory(nameFunc)
+
+        self.fRooWorkspace.Print()
 
     def FitInvMassSpectrum(self, fitRangeMin, fitRangeMax):
         '''
@@ -80,7 +92,7 @@ class DQFitter:
         for parName in self.fParNames:
             histResults.GetXaxis().SetBinLabel(index, parName)
             histResults.SetBinContent(index, self.fRooWorkspace.var(parName).getVal())
-            histResults.SetBinContent(index, self.fRooWorkspace.var(parName).getError())
+            histResults.SetBinError(index, self.fRooWorkspace.var(parName).getError())
             index += 1
 
         rooDs.plotOn(fRooPlot)
