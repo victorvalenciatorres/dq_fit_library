@@ -1,5 +1,6 @@
 from traceback import print_tb
 import yaml
+import json
 import sys
 import argparse
 from array import array
@@ -71,8 +72,9 @@ def main():
     args = parser.parse_args()
 
     print('Loading task configuration: ...', end='\r')
-    with open(args.cfgFileName, 'r') as ymlCfgFile:
-        inputCfg = yaml.load(ymlCfgFile, yaml.FullLoader)
+    with open(args.cfgFileName, 'r') as jsonCfgFile:
+        inputCfg = json.load(jsonCfgFile)
+        #inputCfg = yaml.load(jsonCfgFile, yaml.FullLoader)
     print('Loading task configuration: Done!')
 
     if args.gen_tutorial:
