@@ -1,6 +1,6 @@
 import ROOT
-from ROOT import TCanvas, TFile, TH1F, RooRealVar, RooDataSet, RooWorkspace, RooDataHist, RooArgSet
-from ROOT import gPad, gROOT
+from ROOT import TCanvas, TFile, TH1F, TPaveText, RooRealVar, RooDataSet, RooWorkspace, RooDataHist, RooArgSet
+from ROOT import gPad, gROOT, kRed, kBlue, kGreen
 
 class DQFitter:
     def __init__(self, fInName, fInputName):
@@ -85,7 +85,8 @@ class DQFitter:
         else:
             print("Perform binned fit")
             rooDs = RooDataHist("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
-        pdf.fitTo(rooDs)
+        #pdf.fitTo(rooDs)
+        fit_res = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Save()))
 
         index = 1
         histResults = TH1F("fit_results_{}".format(trialName), "fit_results_{}".format(trialName), len(self.fParNames), 0., len(self.fParNames))
@@ -97,7 +98,20 @@ class DQFitter:
 
         rooDs.plotOn(fRooPlot)
         pdf.plotOn(fRooPlot)
-        pdf.paramOn(fRooPlot, ROOT.RooFit.Layout(0.55))
+        for i in range(0, len(self.fPdfDict["pdf"])):
+            if not self.fPdfDict["pdfName"][i] == "SUM":
+                pdf.plotOn(fRooPlot, ROOT.RooFit.Components("{}Pdf".format(self.fPdfDict["pdfName"][i])), ROOT.RooFit.LineColor(ROOT.kBlack), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineWidth(1))
+        
+        paveText = TPaveText(0.60, 0.45, 0.99, 0.94, "brNDC")
+        paveText.SetTextFont(42)
+        paveText.SetTextSize(0.025)
+        for parName in self.fParNames:
+            paveText.AddText("{} = {:.4f} #pm {:.4f}".format(parName, self.fRooWorkspace.var(parName).getVal(), self.fRooWorkspace.var(parName).getError()))
+            if "Jpsi" in parName:
+                (paveText.GetListOfLines().Last()).SetTextColor(kRed+1)
+            if "Psi2s" in parName:
+                (paveText.GetListOfLines().Last()).SetTextColor(kGreen+1)
+        fRooPlot.addObject(paveText)
 
         # Fit plot
         canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 600, 600)
