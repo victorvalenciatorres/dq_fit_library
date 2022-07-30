@@ -27,18 +27,13 @@ def GenerateTutorialSample():
 
     funcMassSig1 = TF1("funcMassSig1", "gaus", 0., 5.)
     funcMassSig1.SetParameter(0, 1.0)
-    funcMassSig1.SetParameter(1, 3.1)
-    funcMassSig1.SetParameter(2, 0.07)
-
-    funcMassSig1 = TF1("funcMassSig1", "gaus", 0., 5.)
-    funcMassSig1.SetParameter(0, 1.0)
-    funcMassSig1.SetParameter(1, 3.1)
-    funcMassSig1.SetParameter(2, 0.07)
+    funcMassSig1.SetParameter(1, 3.096)
+    funcMassSig1.SetParameter(2, 0.070)
 
     funcMassSig2 = TF1("funcMassSig2", "gaus", 0., 5.)
     funcMassSig2.SetParameter(0, 1.0)
-    funcMassSig2.SetParameter(1, 3.7)
-    funcMassSig2.SetParameter(2, 0.08)
+    funcMassSig2.SetParameter(1, 3.686)
+    funcMassSig2.SetParameter(2, 1.05 * 0.070)
 
     histMass = TH1F("histMass", "histMass", 100, 0., 5.)
     histMass.FillRandom("funcMassBkg", int(nEvents - (nEvents * SigOverBkg1)))

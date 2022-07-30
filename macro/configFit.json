@@ -5,6 +5,7 @@
     "pdf_dictionary": {
       "pdf": ["CB2", "CB2", "VWG", "SUM"],
       "pdfName": ["Jpsi", "Psi2s", "Bkg", "SUM"],
+      "pdfColor": [633, 417, 1],
       "parVal": [
         [3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694],
         [3.68, 1.5e-01, 1.089, 3.393, 2.097, 8.694],
@@ -25,7 +26,7 @@
       ],
       "parName": [
         ["mean_Jpsi", "width_Jpsi", "a_Jpsi", "b_Jpsi", "c_Jpsi", "d_Jpsi"],
-        ["sum::mean_Psi2s(mean_Jpsi,0.584)", "width_Psi2s", "a_Psi2s", "b_Psi2s", "c_Psi2s", "d_Psi2s"],
+        ["sum::mean_Psi2s(mean_Jpsi,0.584)", "prod::width_Psi2s(width_Jpsi,1.05)", "a_Psi2s", "b_Psi2s", "c_Psi2s", "d_Psi2s"],
         ["aa", "bb", "cc"],
         ["sig_Jpsi", "sig_Psi2s", "bkg"]
       ],

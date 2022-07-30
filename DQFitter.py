@@ -37,7 +37,7 @@ class DQFitter:
             if not self.fPdfDict["pdf"][i] == "SUM":
                 # Filling parameter list
                 for j in range(0, len(parVal)):
-                    if "sum" in parName[j]:
+                    if ("sum" in parName[j]) or ("prod" in parName[j]):
                         self.fRooWorkspace.factory("{}".format(parName[j]))
                         # Replace the exression of the parameter with the name of the parameter
                         r1 = parName[j].find("::") + 2
@@ -80,10 +80,10 @@ class DQFitter:
         self.fRooMass.setRange("range", fitRangeMin, fitRangeMax)
         fRooPlot = self.fRooMass.frame(ROOT.RooFit.Title(trialName))
         if "TTree" in self.fInput.ClassName():
-            print("Perform unbinned fit")
+            print("########### Perform unbinned fit ###########")
             rooDs = RooDataSet("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
         else:
-            print("Perform binned fit")
+            print("########### Perform binned fit ###########")
             rooDs = RooDataHist("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
         #pdf.fitTo(rooDs)
         fit_res = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Save()))
@@ -100,17 +100,16 @@ class DQFitter:
         pdf.plotOn(fRooPlot)
         for i in range(0, len(self.fPdfDict["pdf"])):
             if not self.fPdfDict["pdfName"][i] == "SUM":
-                pdf.plotOn(fRooPlot, ROOT.RooFit.Components("{}Pdf".format(self.fPdfDict["pdfName"][i])), ROOT.RooFit.LineColor(ROOT.kBlack), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineWidth(1))
+                pdf.plotOn(fRooPlot, ROOT.RooFit.Components("{}Pdf".format(self.fPdfDict["pdfName"][i])), ROOT.RooFit.LineColor(self.fPdfDict["pdfColor"][i]), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineWidth(1))
         
         paveText = TPaveText(0.60, 0.45, 0.99, 0.94, "brNDC")
         paveText.SetTextFont(42)
         paveText.SetTextSize(0.025)
         for parName in self.fParNames:
             paveText.AddText("{} = {:.4f} #pm {:.4f}".format(parName, self.fRooWorkspace.var(parName).getVal(), self.fRooWorkspace.var(parName).getError()))
-            if "Jpsi" in parName:
-                (paveText.GetListOfLines().Last()).SetTextColor(kRed+1)
-            if "Psi2s" in parName:
-                (paveText.GetListOfLines().Last()).SetTextColor(kGreen+1)
+            for i in range(0, len(self.fPdfDict["pdfName"])):
+                if self.fPdfDict["pdfName"][i] in parName:
+                    (paveText.GetListOfLines().Last()).SetTextColor(self.fPdfDict["pdfColor"][i])
         fRooPlot.addObject(paveText)
 
         # Fit plot
