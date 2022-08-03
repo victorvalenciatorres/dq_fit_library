@@ -41,8 +41,9 @@ def GenerateTutorialSample():
     histMass.FillRandom("funcMassSig2", int(nEvents * SigOverBkg2))
     histMass.Write()
 
-    print("counterSig1 = %f" % (int(nEvents * SigOverBkg1)))
-    print("counterSig2 = %f" % (int(nEvents * SigOverBkg2)))
+    print("Data histogram")
+    print("counter J/psi = %f" % (int(nEvents * SigOverBkg1)))
+    print("counter Psi(2S) = %f" % (int(nEvents * SigOverBkg2)))
 
     counterSig1 = 0
     counterSig2 = 0
@@ -67,14 +68,16 @@ def GenerateTutorialSample():
 
     fOut.Close()
 
-    print("counterSig1 = %f" % (counterSig1))
-    print("counterSig2 = %f" % (counterSig2))
+    print("Data tree")
+    print("counter J/psi = %f" % (counterSig1))
+    print("counter Psi(2S) = %f" % (counterSig2))
 
 def main():
     parser = argparse.ArgumentParser(description='Arguments to pass')
     parser.add_argument('cfgFileName', metavar='text', default='config.yml', help='config file name')
     parser.add_argument("--gen_tutorial", help="generate tutorial sample", action="store_true")
-    parser.add_argument("--run_fit", help="run the multi trial", action="store_true")
+    parser.add_argument("--do_fit", help="run the multi trial", action="store_true")
+    parser.add_argument("--do_systematics", help="do systematic on signal extraction", action="store_true")
     parser.add_argument("--optimize_fit", help="optimize the fit parameters", action="store_true")
     args = parser.parse_args()
 
@@ -87,17 +90,18 @@ def main():
     if args.gen_tutorial:
         GenerateTutorialSample()
     
-    if args.run_fit:
+    if args.do_fit:
         dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"])
-        dqFitter.TestConfig(inputCfg["input"]["pdf_dictionary"])
+        dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
         dqFitter.MultiTrial()
+
+    if args.do_systematics:
+        fIn = TFile.Open("FitResults.root")
+        DoSystematics(fIn, "sig_Jpsi")
 
     if args.optimize_fit:
         dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"])
-        dqFitter.TestConfig(inputCfg["input"]["pdf_dictionary"])
+        dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
         dqFitter.OptimizeFit()
-
-    #fIn = TFile.Open("FitResults.root")
-    #DoSystematics(fIn, "sig")
 
 main()

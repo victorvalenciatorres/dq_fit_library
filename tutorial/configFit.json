@@ -31,7 +31,8 @@
         ["sig_Jpsi", "sig_Psi2s", "bkg"]
       ],
       "fitRangeMin": [2, 2.1, 2.2],
-      "fitRangeMax": [5, 4.9, 4.8]
+      "fitRangeMax": [5, 4.9, 4.8],
+      "fitMethod": "likelyhood"
     }
   }
 }

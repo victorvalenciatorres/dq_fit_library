@@ -90,7 +90,7 @@ def DoSystematics(fIn, parName):
     SetLatex(latexTitle)
 
     canvasParVal = TCanvas("canvasParVal", "canvasParVal", 800, 600)
-    histGrid = TH2F("histGrid", "", len(parValArray), 0, len(parValArray), 100, 0, 2 * max(parValArray))
+    histGrid = TH2F("histGrid", "", len(parValArray), 0, len(parValArray), 100, 0.7 * max(parValArray), 1.3 * max(parValArray))
     indexLabel = 1
     for nameTrial in nameTrialArray:
         histGrid.GetXaxis().SetBinLabel(indexLabel, nameTrial)
@@ -101,7 +101,7 @@ def DoSystematics(fIn, parName):
     lineParStatDown.Draw("same")
     graParSyst.Draw("E2same")
     graParVal.Draw("EPsame")
-    latexTitle.DrawLatex(0.37, 0.85, "N_{J/#psi} = #bf{%3.2f} #pm #bf{%3.2f} (%2.1f %%) #pm #bf{%3.2f} (%2.1f %%)" % (funcParVal.GetParameter(0), funcParVal.GetParError(0), (funcParVal.GetParError(0)/funcParVal.GetParameter(0))*100, ComputeRMS(parValArray), (ComputeRMS(parValArray)/funcParVal.GetParameter(0))*100))
+    latexTitle.DrawLatex(0.37, 0.85, "N_{J/#psi} = #bf{%3.2f} #pm #bf{%3.2f} (%3.2f %%) #pm #bf{%3.2f} (%3.2f %%)" % (funcParVal.GetParameter(0), funcParVal.GetParError(0), (funcParVal.GetParError(0)/funcParVal.GetParameter(0))*100, ComputeRMS(parValArray), (ComputeRMS(parValArray)/funcParVal.GetParameter(0))*100))
 
     canvasParVal.SaveAs("test.pdf")
 
