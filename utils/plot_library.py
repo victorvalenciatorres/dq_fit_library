@@ -106,3 +106,30 @@ def DrawRatioPlot(hist1, hist2, dirName, plotName):
 
     canvas.Update()
     canvas.SaveAs("%s/ratio_%s.pdf" % dirName.Data(), plotName.Data())
+
+
+def DoResidualPlot(rooPlot, rooVar, trialName):
+    rooHistRatio = rooPlot.residHist()
+    rooPlotRatio = rooVar.frame(ROOT.RooFit.Title("Residual Distribution"))
+    rooPlotRatio.addPlotable(rooHistRatio,"P")
+    canvasRatio = TCanvas("ratio_plot_{}".format(trialName), "ratio_plot_{}".format(trialName), 600, 600)
+    canvasRatio.SetLeftMargin(0.15)
+    rooPlotRatio.GetYaxis().SetTitleOffset(1.4)
+    rooPlotRatio.Draw()
+    return canvasRatio
+
+def DoPullPlot(rooPlot, rooVar, trialName):
+    rooHistPull = rooPlot.pullHist()
+    rooPlotPull = rooVar.frame(ROOT.RooFit.Title("Pull Distribution"))
+    rooPlotPull.addPlotable(rooHistPull,"P")
+    canvasPull = TCanvas("pull_plot_{}".format(trialName), "pull_plot_{}".format(trialName), 600, 600)
+    canvasPull.SetLeftMargin(0.15)
+    rooPlotPull.GetYaxis().SetTitleOffset(1.4)
+    rooPlotPull.Draw()
+    return canvasPull
+
+def DoCorrMatPlot(rooFitRes, trialName):
+    histCorrMat = rooFitRes.correlationHist("hist_corr_mat_{}".format(trialName))
+    canvasCorrMat = TCanvas("corr_mat_{}".format(trialName), "corr_mat_{}".format(trialName), 600, 600)
+    histCorrMat.Draw("COLZ")
+    return canvasCorrMat

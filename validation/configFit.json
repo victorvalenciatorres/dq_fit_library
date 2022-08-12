@@ -28,7 +28,10 @@
       ],
       "fitRangeMin": [2, 2.1, 2.2],
       "fitRangeMax": [5, 4.9, 4.8],
-      "fitMethod": "chi2"
+      "fitMethod": "chi2",
+      "doResidualPlot": true,
+      "doPullPlot": true, 
+      "doCorrMatPlot": true
     }
   },
   "output": {

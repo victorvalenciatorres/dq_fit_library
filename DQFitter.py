@@ -1,6 +1,7 @@
 import ROOT
 from ROOT import TCanvas, TFile, TH1F, TPaveText, RooRealVar, RooDataSet, RooWorkspace, RooDataHist, RooArgSet
 from ROOT import gPad, gROOT, kRed, kBlue, kGreen
+from utils.plot_library import DoResidualPlot, DoPullPlot, DoCorrMatPlot
 
 class DQFitter:
     def __init__(self, fInName, fInputName):
@@ -15,6 +16,9 @@ class DQFitter:
         self.fFitRangeMax      = []
         self.fTrialName        = ""
         self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5)
+        self.fDoResidualPlot   = False
+        self.fDoPullPlot       = False
+        self.fDoCorrMatPlot    = False
 
     def SetFitConfig(self, pdfDict):
         '''
@@ -24,6 +28,9 @@ class DQFitter:
         self.fFitMethod = pdfDict["fitMethod"]
         self.fFitRangeMin = pdfDict["fitRangeMin"]
         self.fFitRangeMax = pdfDict["fitRangeMax"]
+        self.fDoResidualPlot = pdfDict["doResidualPlot"]
+        self.fDoPullPlot = pdfDict["doPullPlot"]
+        self.fDoCorrMatPlot = pdfDict["doCorrMatPlot"]
 
         pdfList = []
         for pdf in self.fPdfDict["pdf"][:-1]:
@@ -145,36 +152,26 @@ class DQFitter:
         fRooPlot.GetYaxis().SetTitleOffset(1.4)
         fRooPlot.Draw()
 
-        # Ratio plot
-        rooHistRatio = fRooPlot.residHist()
-        rooPlotRatio = self.fRooMass.frame(ROOT.RooFit.Title("Residual Distribution"))
-        rooPlotRatio.addPlotable(rooHistRatio,"P")
-        canvasRatio = TCanvas("ratio_plot_{}".format(trialName), "ratio_plot_{}".format(trialName), 600, 600)
-        canvasRatio.SetLeftMargin(0.15)
-        rooPlotRatio.GetYaxis().SetTitleOffset(1.4)
-        rooPlotRatio.Draw()
-
-        # Pull plot
-        rooHistPull = fRooPlot.pullHist()
-        rooPlotPull = self.fRooMass.frame(ROOT.RooFit.Title("Pull Distribution"))
-        rooPlotPull.addPlotable(rooHistPull,"P")
-        canvasPull = TCanvas("pull_plot_{}".format(trialName), "pull_plot_{}".format(trialName), 600, 600)
-        canvasPull.SetLeftMargin(0.15)
-        rooPlotPull.GetYaxis().SetTitleOffset(1.4)
-        rooPlotPull.Draw()
-
-        # Correlation matrix histogram
-        histCorrMat = rooFitRes.correlationHist("hist_corr_mat_{}".format(trialName))
-        canvasCorrMat = TCanvas("corr_mat_{}".format(trialName), "corr_mat_{}".format(trialName), 600, 600)
-        histCorrMat.Draw("COLZ")
-
         # Save results
         self.fFileOut.cd()
         histResults.Write()
         canvasFit.Write()
-        canvasRatio.Write()
-        canvasPull.Write()
-        canvasCorrMat.Write()
+
+        # Ratio plot
+        if self.fDoResidualPlot:
+            canvasRatio = DoResidualPlot(fRooPlot, self.fRooMass, trialName)
+            canvasRatio.Write()
+
+        # Pull plot
+        if self.fDoPullPlot:
+            canvasPull = DoPullPlot(fRooPlot, self.fRooMass, trialName)
+            canvasPull.Write()
+
+        # Correlation matrix plot
+        if self.fDoCorrMatPlot:
+            canvasCorrMat = DoCorrMatPlot(rooFitRes, trialName)
+            canvasCorrMat.Write()
+
         rooFitRes.Write("info_fit_results_{}".format(trialName))
     
     def MultiTrial(self):
@@ -184,7 +181,6 @@ class DQFitter:
         for iRange in range(0, len(self.fFitRangeMin)):
             self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
         self.fFileOut.Close()
-
 
 
 #################################################
