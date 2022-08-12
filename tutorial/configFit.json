@@ -34,5 +34,8 @@
       "fitRangeMax": [5, 4.9, 4.8],
       "fitMethod": "likelyhood"
     }
+  },
+  "output": {
+    "output_file_name": "FitResults.root"
   }
 }

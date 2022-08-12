@@ -98,7 +98,7 @@ class DQFitter:
             rooFitRes = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Extended(ROOT.kTRUE), ROOT.RooFit.Save()))
         if fitMethod == "chi2":
             print("########### Perform X2 fit ###########")
-            rooFitRes = ROOT.RooFitResult(pdf.chi2FitTo(rooDs))
+            rooFitRes = ROOT.RooFitResult(pdf.chi2FitTo(rooDs, ROOT.RooFit.Save()))
 
         index = 1
         histResults = TH1F("fit_results_{}".format(trialName), "fit_results_{}".format(trialName), len(self.fParNames), 0., len(self.fParNames))
@@ -130,7 +130,12 @@ class DQFitter:
                     (paveText.GetListOfLines().Last()).SetTextColor(self.fPdfDict["pdfColor"][i])
 
         # Print the chiSquare value
-        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()))
+        nPars = rooFitRes.floatParsFinal().getSize()
+        nBins = fRooPlot.GetXaxis().FindBin(fitRangeMax) - fRooPlot.GetXaxis().FindBin(fitRangeMin)
+        paveText.AddText("#bf{#chi^{2} = %3.2f}" % (fRooPlot.chiSquare()))
+        paveText.AddText("n Par = %3.2f" % (nPars))
+        paveText.AddText("n Bins = %3.2f" % (nBins))
+        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()/(nBins - nPars)))
         fRooPlot.addObject(paveText)
 
         # Fit plot
@@ -179,3 +184,75 @@ class DQFitter:
         for iRange in range(0, len(self.fFitRangeMin)):
             self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
         self.fFileOut.Close()
+
+
+
+#################################################
+    def OptimizeFit(self):
+        '''
+        Optimize fit parameters and perform bin counting
+        '''
+
+        pdf = self.fRooWorkspace.pdf("BkgPdf")
+        background_norm = ROOT.RooRealVar("background_norm", "background_norm", 1e4, 0, 1e8)
+        model = ROOT.RooAddPdf("model","model",ROOT.RooArgList(pdf),ROOT.RooArgList(background_norm))
+
+        if "TTree" in self.fInput.ClassName():
+            print("########### Perform unbinned fit ###########")
+            rooDs = RooDataSet("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
+        else:
+            print("########### Perform binned fit ###########")
+            rooDs = RooDataHist("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
+
+        # Fit pdf to all data
+        r_full = model.fitTo(rooDs, ROOT.RooFit.Save(ROOT.kTRUE))
+        
+        # Fit partial range
+        # ----------------------------------
+        # Define "signal" range in x as [-3,3]
+        self.fRooMass.setRange("left", 2., 2.7)
+        self.fRooMass.setRange("right", 4, 5)
+        
+        # Fit pdf only to data in "signal" range
+        r_left = model.fitTo(rooDs, ROOT.RooFit.Save(ROOT.kTRUE))
+        
+        # Plot/print results
+        # ---------------------------------------
+        
+        # Make plot frame in x and add data and fitted model
+        frame = self.fRooMass.frame(ROOT.RooFit.Title("Fitting a sub range"))
+        rooDs.plotOn(frame)
+        model.plotOn(frame, ROOT.RooFit.Range("left,right"), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(ROOT.kRed)) # Add shape in full ranged dashed
+        model.plotOn(frame)  # By default only fitted range is shown
+
+
+        c = ROOT.TCanvas("rf203_ranges", "rf203_ranges", 600, 600)
+        ROOT.gPad.SetLeftMargin(0.15)
+        frame.GetYaxis().SetTitleOffset(1.4)
+        frame.Draw()
+        c.Update()
+ 
+        input()
+
+        #self.fRooMass.setRange("FULL", 2, 5)
+        #self.fRooMass.setRange("LEFT", 2.1, 2.5)
+        #self.fRooMass.setRange("RIGHT", 4, 5)
+        #fRooPlot = self.fRooMass.frame(ROOT.RooFit.Title("test"))
+
+        #rooFitRes = ROOT.RooFitResult(model.fitTo(rooDs, ROOT.RooFit.Range("FULL"), ROOT.RooFit.Save()))
+        #rooFitRes.Print()
+        
+        #model.fitTo(rooDs, ROOT.RooFit.Range(2, 2.5))
+
+        #rooDs.plotOn(fRooPlot, ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.6))
+        #model.plotOn(fRooPlot, ROOT.RooFit.LineColor(ROOT.kRed), ROOT.RooFit.LineWidth(2))
+
+        # Fit plot
+        #canvasFit = TCanvas("canvasFit", "canvasFit", 600, 600)
+        #canvasFit.SetLeftMargin(0.15)
+        #gPad.SetLeftMargin(0.15)
+        #fRooPlot.GetYaxis().SetTitleOffset(1.4)
+        #fRooPlot.Draw()
+        #canvasFit.Update()
+
+        input()
