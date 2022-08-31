@@ -91,7 +91,7 @@ def main():
         GenerateTutorialSample()
     
     if args.do_fit:
-        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"])
+        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"], inputCfg["output"]["output_file_name"])
         dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
         dqFitter.MultiTrial()
 
@@ -100,7 +100,7 @@ def main():
         DoSystematics(fIn, "sig_Jpsi")
 
     if args.optimize_fit:
-        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"])
+        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"], inputCfg["output"]["output_file_name"])
         dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
         dqFitter.OptimizeFit()
 

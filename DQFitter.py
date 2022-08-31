@@ -4,9 +4,9 @@ from ROOT import gPad, gROOT, kRed, kBlue, kGreen
 from utils.plot_library import DoResidualPlot, DoPullPlot, DoCorrMatPlot
 
 class DQFitter:
-    def __init__(self, fInName, fInputName):
+    def __init__(self, fInName, fInputName, fOutName):
         self.fPdfDict          = {}
-        self.fFileOut          = TFile("FitResults.root", "RECREATE")
+        self.fFileOut          = TFile(fOutName, "RECREATE")
         self.fFileIn           = TFile.Open(fInName)
         self.fInput            = self.fFileIn.Get(fInputName)
         self.fRooWorkspace     = RooWorkspace('w','workspace')

@@ -1,0 +1,40 @@
+{
+    "input": {
+      "input_file_name": "Data.root",
+      "input_name": "Mass_PairsMuonSEPM_matchedMchMid",
+      "pdf_dictionary": {
+        "pdf": ["CB2", "VWG", "SUM"],
+        "pdfName": ["Jpsi", "Bkg", "SUM"],
+        "pdfColor": [601, 1],
+        "parVal": [
+          [3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694],
+          [1, 1, 1],
+          [1000, 100000]
+        ],
+        "parLimMin": [
+          [2.9, 7.0e-02, 1.0889, 3.3929, 2.096, 8.693],
+          [-10, 0, -100],
+          [0, 0]
+        ],
+        "parLimMax": [
+          [3.5, 1.9e-01, 1.0891, 3.3931, 2.098, 8.695],
+          [10, 100, 100],
+          [500000, 500000]
+        ],
+        "parName": [
+          ["mean_Jpsi", "width_Jpsi", "a_Jpsi", "b_Jpsi", "c_Jpsi", "d_Jpsi"],
+          ["aa", "bb", "cc"],
+          ["sig_Jpsi", "bkg"]
+        ],
+        "fitRangeMin": [2, 2.1, 2.2],
+        "fitRangeMax": [5, 4.9, 4.8],
+        "fitMethod": "chi2",
+        "doResidualPlot": true,
+        "doPullPlot": true, 
+        "doCorrMatPlot": true
+      }
+    },
+    "output": {
+      "output_file_name": "FitResultsData.root"
+    }
+  }
