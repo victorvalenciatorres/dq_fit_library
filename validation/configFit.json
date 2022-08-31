@@ -1,6 +1,6 @@
 {
   "input": {
-    "input_file_name": "data.root",
+    "input_file_name": "MC.root",
     "input_name": "Mass",
     "pdf_dictionary": {
       "pdf": ["CB2", "VWG", "SUM"],
