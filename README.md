@@ -1,4 +1,10 @@
 ## DQ fit library
+### Python class
+
+```ruby
+python tutorial.py configFit.json --fo_fit
+```
+### c++ class
 This class can be used to fit invariant mass distributions (signal + backgorund). To run it is necessary **ROOT6**. 
 The class contains:
 * class files: **DQFitter.cxx** and **DQFitter.h**
