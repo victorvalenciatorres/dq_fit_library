@@ -1,9 +1,15 @@
 ## DQ fit library
 ### Python class
+This python class is based on RooFit and allows to perform binned and unbinned fits. An example of fit can be found in /tutorial:
 
-```ruby
-python tutorial.py configFit.json --fo_fit
-```
+- Generate a toy sample
+  ```ruby
+  python tutorial.py configFit.json --gen_tutorial
+  ```
+- Run the fit on the toy sample
+  ```ruby
+  python tutorial.py configFit.json --fo_fit
+  ```
 ### c++ class
 This class can be used to fit invariant mass distributions (signal + backgorund). To run it is necessary **ROOT6**. 
 The class contains:
