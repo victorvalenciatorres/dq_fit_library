@@ -6,7 +6,7 @@ import sys
 import argparse
 import ROOT
 from os import path
-from ROOT import TCanvas, TF1, TFile, TPaveText, TMath, TH1F, TString, TLegend, TRatioPlot, TGaxis
+from ROOT import TCanvas, TLatex, TF1, TFile, TPaveText, TMath, TH1F, TString, TLegend, TRatioPlot, TGaxis
 from ROOT import gROOT, gBenchmark, gPad, gStyle, kTRUE, kFALSE
 
 def SetLatex(latex):
@@ -24,55 +24,17 @@ def SetLegend(legend):
     legend.SetTextSize(0.03)
 
 def LoadStyle():
-    font = 42
-    TGaxis.SetMaxDigits(2)
-    gStyle.SetFrameBorderMode(0)
-    gStyle.SetFrameFillColor(0)
-    gStyle.SetCanvasBorderMode(0)
-    gStyle.SetPadBorderMode(0)
-    gStyle.SetPadColor(10)
-    gStyle.SetCanvasColor(10)
-    gStyle.SetTitleFillColor(10)
-    gStyle.SetTitleBorderSize(1)
-    gStyle.SetStatColor(10)
-    gStyle.SetStatBorderSize(1)
-    gStyle.SetLegendBorderSize(1)
-    gStyle.SetDrawBorder(0)
-    gStyle.SetTextFont(font)
-    gStyle.SetStatFontSize(0.03)
-    gStyle.SetStatX(0.97)
-    gStyle.SetStatY(0.98)
-    gStyle.SetStatH(0.05)
-    gStyle.SetStatW(0.2)
-    gStyle.SetTickLength(0.02,"y")
-    gStyle.SetEndErrorSize(3)
-    gStyle.SetLabelSize(0.035,"xyz")
-    gStyle.SetLabelFont(font,"xyz")
-    gStyle.SetLabelOffset(0.01,"xyz")
-    gStyle.SetTitleFont(font,"xyz")
-    gStyle.SetTitleOffset(0.9,"x")
-    gStyle.SetTitleOffset(1.02,"y")
-    gStyle.SetTitleSize(0.04,"xyz")
-    gStyle.SetMarkerSize(0.5)
-    gStyle.SetOptFit(0)
-    gStyle.SetEndErrorSize(0)
-    gStyle.SetCanvasPreferGL(kTRUE)
-    gStyle.SetHatchesSpacing(0.5)
-    gStyle.SetOptTitle(0)
-    gStyle.SetLineWidth(2)
     gStyle.SetPadLeftMargin(0.15)
     gStyle.SetPadBottomMargin(0.15)
     gStyle.SetPadTopMargin(0.05)
     gStyle.SetPadRightMargin(0.05)
-    gStyle.SetTitleSize(0.06)
-    gStyle.SetTitleSize(0.06,"Y")
-    gStyle.SetTitleOffset(1.2,"Y")
+    gStyle.SetEndErrorSize(0.0)
+    gStyle.SetTitleSize(0.05,"X")
+    gStyle.SetTitleSize(0.045,"Y")
+    gStyle.SetLabelSize(0.045,"X")
+    gStyle.SetLabelSize(0.045,"Y")
     gStyle.SetTitleOffset(1.2,"X")
-    gStyle.SetFrameLineWidth(2)
-    gStyle.SetNdivisions(505,"X")
-    gStyle.SetNdivisions(505,"Y")
-    gStyle.SetPadTickX(1)
-    gStyle.SetPadTickY(1)
+    gStyle.SetTitleOffset(1.35,"Y")
 
 def DrawRatioPlot(hist1, hist2, dirName, plotName):
     gStyle.SetOptStat(0)
@@ -133,3 +95,46 @@ def DoCorrMatPlot(rooFitRes, trialName):
     canvasCorrMat = TCanvas("corr_mat_{}".format(trialName), "corr_mat_{}".format(trialName), 600, 600)
     histCorrMat.Draw("COLZ")
     return canvasCorrMat
+
+def DoAlicePlot(rooDs, pdf, rooPlot, pdfDict, trialName, path):
+    # Official fit plot
+    rooDs.plotOn(rooPlot, ROOT.RooFit.Name("Data"), ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.5))
+    pdf.plotOn(rooPlot, ROOT.RooFit.Name("Fit"), ROOT.RooFit.LineColor(ROOT.kRed+1), ROOT.RooFit.LineWidth(2))
+    for i in range(0, len(pdfDict["pdf"])):
+        if not pdfDict["pdfName"][i] == "SUM":
+            pdf.plotOn(rooPlot, ROOT.RooFit.Components("{}Pdf".format(pdfDict["pdfName"][i])), ROOT.RooFit.Name(pdfDict["pdfNameForLegend"][i]), ROOT.RooFit.LineColor(pdfDict["pdfColor"][i]), ROOT.RooFit.LineStyle(pdfDict["pdfStyle"][i]), ROOT.RooFit.LineWidth(2))
+
+    legend = ROOT.TLegend(0.65, 0.60, 0.85, 0.89, " ", "brNDC")
+    legend.SetBorderSize(0)
+    legend.SetFillColor(10)
+    legend.SetFillStyle(1)
+    legend.SetLineStyle(0)
+    legend.SetLineColor(0)
+    legend.SetTextFont(42)
+    legend.SetTextSize(0.04)
+    legend.AddEntry(rooPlot.findObject("Data"), "Data", "P")
+    legend.AddEntry(rooPlot.findObject("Fit"), "Fit", "L")
+    for i in range(0, len(pdfDict["pdf"])):
+        if not pdfDict["pdfName"][i] == "SUM":
+            legend.AddEntry(rooPlot.findObject(pdfDict["pdfNameForLegend"][i]), pdfDict["pdfNameForLegend"][i], "L")
+
+    rooPlot.SetTitle("")
+
+    canvasALICE = TCanvas("ALICE_{}".format(trialName), "ALICE_{}".format(trialName), 800, 600)
+    canvasALICE.Update()
+    canvasALICE.SetLeftMargin(0.15)
+    rooPlot.Draw()
+
+    legend.Draw("same")
+
+    letexTitle = TLatex()
+    letexTitle.SetTextSize(0.045)
+    letexTitle.SetNDC()
+    letexTitle.SetTextFont(42)
+    for i in range(0, len(pdfDict["text"])):
+        letexTitle.DrawLatex(pdfDict["text"][i][0], pdfDict["text"][i][1], pdfDict["text"][i][2])
+
+    if not os.path.isdir(path):
+        os.system("mkdir -p %s" % (path))
+
+    canvasALICE.SaveAs("{}ALICE_{}.pdf".format(path, trialName))

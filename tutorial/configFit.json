@@ -5,7 +5,8 @@
     "pdf_dictionary": {
       "pdf": ["CB2", "CB2", "VWG", "SUM"],
       "pdfName": ["Jpsi", "Psi2s", "Bkg", "SUM"],
-      "pdfColor": [601, 417, 1],
+      "pdfColor": [861, 417, 1],
+      "pdfStyle": [1, 1, 2],
       "parVal": [
         [3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694],
         [3.68, 1.5e-01, 1.089, 3.393, 2.097, 8.694],
@@ -32,7 +33,10 @@
       ],
       "fitRangeMin": [2, 2.1, 2.2],
       "fitRangeMax": [5, 4.9, 4.8],
-      "fitMethod": "likelyhood"
+      "fitMethod": "likelyhood",
+      "doResidualPlot": true,
+      "doPullPlot": true, 
+      "doCorrMatPlot": true
     }
   },
   "output": {

@@ -1,11 +1,13 @@
 {
     "input": {
-      "input_file_name": "Data.root",
+      "input_file_name": "/Users/lucamicheletti/GITHUB/dq_analysis_utils/macro/output/Data/LHC22m_apass1_bis_muons.root",
       "input_name": "Mass_PairsMuonSEPM_muonLowPt",
       "pdf_dictionary": {
         "pdf": ["CB2", "VWG", "SUM"],
         "pdfName": ["Jpsi", "Bkg", "SUM"],
-        "pdfColor": [601, 1],
+        "pdfNameForLegend": ["J/#psi", "Background", "Fit"],
+        "pdfColor": [861, 1],
+        "pdfStyle": [1, 2],
         "parVal": [
           [3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694],
           [1, 1, 1],
@@ -28,13 +30,19 @@
         ],
         "fitRangeMin": [2, 2.1, 2.2],
         "fitRangeMax": [5, 4.9, 4.8],
-        "fitMethod": "chi2",
+        "fitMethod": "likelyhood",
         "doResidualPlot": true,
         "doPullPlot": true, 
-        "doCorrMatPlot": true
+        "doCorrMatPlot": true,
+        "text": [
+          [0.25, 0.82, "LHC22m, pp #sqrt{#it{s}} = 13.6 TeV"], 
+          [0.25, 0.75, "2.5 < #it{y} < 4, J/#psi #rightarrow #mu^{+}#mu^{-}"]
+        ],
+        "doAlicePlot": true,
+        "path_for_plots": "figures/"
       }
     },
     "output": {
-      "output_file_name": "FitResultsData.root"
+      "output_file_name": "FitResultsData_bis.root"
     }
   }
