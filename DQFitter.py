@@ -132,12 +132,20 @@ class DQFitter:
             if not self.fPdfDict["pdfName"][i] == "SUM":
                 pdf.plotOn(fRooPlot, ROOT.RooFit.Components("{}Pdf".format(self.fPdfDict["pdfName"][i])), ROOT.RooFit.LineColor(self.fPdfDict["pdfColor"][i]), ROOT.RooFit.LineStyle(self.fPdfDict["pdfStyle"][i]), ROOT.RooFit.LineWidth(2), ROOT.RooFit.Range(fitRangeMin, fitRangeMax))
         
+        extraText = [] # extra text for "propaganda" plots
+
         paveText = TPaveText(0.60, 0.45, 0.99, 0.94, "brNDC")
         paveText.SetTextFont(42)
         paveText.SetTextSize(0.025)
         paveText.SetFillColor(ROOT.kWhite)
         for parName in self.fParNames:
             paveText.AddText("{} = {:.4f} #pm {:.4f}".format(parName, self.fRooWorkspace.var(parName).getVal(), self.fRooWorkspace.var(parName).getError()))
+            if self.fPdfDict["parForAlicePlot"].count(parName) > 0:
+                text = self.fPdfDict["parNameForAlicePlot"][self.fPdfDict["parForAlicePlot"].index(parName)]
+                if "sig" in parName:
+                    extraText.append("{} = {:.0f} #pm {:.0f}".format(text, self.fRooWorkspace.var(parName).getVal(), self.fRooWorkspace.var(parName).getError()))
+                else:
+                    extraText.append("{} = {:.3f} #pm {:.3f}".format(text, self.fRooWorkspace.var(parName).getVal(), self.fRooWorkspace.var(parName).getError()))
             for i in range(0, len(self.fPdfDict["pdfName"])):
                 if self.fPdfDict["pdfName"][i] in parName:
                     (paveText.GetListOfLines().Last()).SetTextColor(self.fPdfDict["pdfColor"][i])
@@ -150,6 +158,7 @@ class DQFitter:
         paveText.AddText("n Bins = %3.2f" % (nBins))
         paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()/(nBins - nPars)))
         fRooPlot.addObject(paveText)
+        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare()/(nBins - nPars)))
 
         # Fit plot
         canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 800, 600)
@@ -160,7 +169,7 @@ class DQFitter:
 
         # Official fit plot
         if self.fPdfDict["doAlicePlot"]:
-            DoAlicePlot(rooDs, pdf, fRooPlotOff, self.fPdfDict, self.fInputName, trialName, self.fOutPath)
+            DoAlicePlot(rooDs, pdf, fRooPlotOff, self.fPdfDict, self.fInputName, trialName, self.fOutPath, extraText)
 
         # Save results
         self.fFileOut.cd()
