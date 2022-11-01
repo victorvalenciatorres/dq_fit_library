@@ -96,13 +96,14 @@ def DoCorrMatPlot(rooFitRes, trialName):
     histCorrMat.Draw("COLZ")
     return canvasCorrMat
 
-def DoAlicePlot(rooDs, pdf, rooPlot, pdfDict, trialName, path):
+def DoAlicePlot(rooDs, pdf, rooPlot, pdfDict, histName, trialName, path):
     # Official fit plot
     rooDs.plotOn(rooPlot, ROOT.RooFit.Name("Data"), ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.5))
     pdf.plotOn(rooPlot, ROOT.RooFit.Name("Fit"), ROOT.RooFit.LineColor(ROOT.kRed+1), ROOT.RooFit.LineWidth(2))
     for i in range(0, len(pdfDict["pdf"])):
         if not pdfDict["pdfName"][i] == "SUM":
             pdf.plotOn(rooPlot, ROOT.RooFit.Components("{}Pdf".format(pdfDict["pdfName"][i])), ROOT.RooFit.Name(pdfDict["pdfNameForLegend"][i]), ROOT.RooFit.LineColor(pdfDict["pdfColor"][i]), ROOT.RooFit.LineStyle(pdfDict["pdfStyle"][i]), ROOT.RooFit.LineWidth(2))
+    rooPlot.SetAxisRange(0, 1.5 * rooPlot.GetMaximum(), "Y")
 
     legend = ROOT.TLegend(0.65, 0.60, 0.85, 0.89, " ", "brNDC")
     legend.SetBorderSize(0)
@@ -120,7 +121,7 @@ def DoAlicePlot(rooDs, pdf, rooPlot, pdfDict, trialName, path):
 
     rooPlot.SetTitle("")
 
-    canvasALICE = TCanvas("ALICE_{}".format(trialName), "ALICE_{}".format(trialName), 800, 600)
+    canvasALICE = TCanvas("ALICE_{}_{}".format(histName, trialName), "ALICE_{}_{}".format(histName, trialName), 800, 600)
     canvasALICE.Update()
     canvasALICE.SetLeftMargin(0.15)
     rooPlot.Draw()
@@ -137,4 +138,4 @@ def DoAlicePlot(rooDs, pdf, rooPlot, pdfDict, trialName, path):
     if not os.path.isdir(path):
         os.system("mkdir -p %s" % (path))
 
-    canvasALICE.SaveAs("{}ALICE_{}.pdf".format(path, trialName))
+    canvasALICE.SaveAs("{}ALICE_{}_{}.pdf".format(path, histName, trialName))

@@ -4,6 +4,7 @@ import json
 import sys
 import argparse
 from array import array
+import os
 from os import path
 import ROOT
 from ROOT import TFile, TF1, TH1F, TTree
@@ -33,17 +34,15 @@ def main():
     #histMass = list.FindObject("Mass")
     
     if args.do_fit:
-        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"], inputCfg["output"]["output_file_name"])
-        dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
-        dqFitter.MultiTrial()
+        if not path.isdir(inputCfg["output"]["output_path"]):
+            os.system("mkdir -p %s" % (inputCfg["output"]["output_path"]))
+        for histName in inputCfg["input"]["input_name"]:
+            dqFitter = DQFitter(inputCfg["input"]["input_file_name"], histName, inputCfg["output"]["output_path"])
+            dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
+            dqFitter.MultiTrial()
 
     if args.do_systematics:
         fIn = TFile.Open("FitResults.root")
         DoSystematics(fIn, "sig_Jpsi")
-
-    if args.optimize_fit:
-        dqFitter = DQFitter(inputCfg["input"]["input_file_name"], inputCfg["input"]["input_name"], inputCfg["output"]["output_file_name"])
-        dqFitter.SetFitConfig(inputCfg["input"]["pdf_dictionary"])
-        dqFitter.OptimizeFit()
 
 main()

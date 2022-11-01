@@ -5,11 +5,13 @@ from ROOT import gPad, gROOT, gStyle, kRed, kBlue, kGreen
 from utils.plot_library import DoResidualPlot, DoPullPlot, DoCorrMatPlot, DoAlicePlot, LoadStyle
 
 class DQFitter:
-    def __init__(self, fInName, fInputName, fOutName):
+    def __init__(self, fInName, fInputName, fOutPath):
         self.fPdfDict          = {}
-        self.fFileOut          = TFile(fOutName, "RECREATE")
+        self.fOutPath          = fOutPath
+        self.fFileOut          = TFile("{}{}.root".format(fOutPath, fInputName), "RECREATE")
         self.fFileIn           = TFile.Open(fInName)
-        self.fInput            = self.fFileIn.Get(fInputName)
+        self.fInputName        = fInputName
+        self.fInput            = 0
         self.fRooWorkspace     = RooWorkspace('w','workspace')
         self.fParNames         = []
         self.fFitMethod        = "likelyhood"
@@ -26,6 +28,7 @@ class DQFitter:
         Method set the configuration of the fit
         '''
         self.fPdfDict = pdfDict
+        self.fInput = self.fFileIn.Get(self.fInputName)
         self.fFitMethod = pdfDict["fitMethod"]
         self.fFitRangeMin = pdfDict["fitRangeMin"]
         self.fFitRangeMax = pdfDict["fitRangeMax"]
@@ -157,7 +160,7 @@ class DQFitter:
 
         # Official fit plot
         if self.fPdfDict["doAlicePlot"]:
-            DoAlicePlot(rooDs, pdf, fRooPlotOff, self.fPdfDict, trialName, self.fPdfDict["path_for_plots"])
+            DoAlicePlot(rooDs, pdf, fRooPlotOff, self.fPdfDict, self.fInputName, trialName, self.fOutPath)
 
         # Save results
         self.fFileOut.cd()
