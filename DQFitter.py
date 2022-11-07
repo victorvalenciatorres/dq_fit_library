@@ -35,7 +35,6 @@ class DQFitter:
         self.fDoResidualPlot = pdfDict["doResidualPlot"]
         self.fDoPullPlot = pdfDict["doPullPlot"]
         self.fDoCorrMatPlot = pdfDict["doCorrMatPlot"]
-
         pdfList = []
         for pdf in self.fPdfDict["pdf"][:-1]:
             self.fTrialName = self.fTrialName + pdf + "_"
