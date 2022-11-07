@@ -10,6 +10,9 @@ This python class is based on RooFit and allows to perform binned and unbinned f
   ```ruby
   python tutorial.py configFit.json --fo_fit
   ```
+For validation of the code use the reference:
+- [Analysis note Jpsi & Psi2S](https://alice-notes.web.cern.ch/system/files/notes/analysis/1216/2022-10-26-AN_Psi2S_v3.pdf)
+
 ### c++ class
 This class can be used to fit invariant mass distributions (signal + backgorund). To run it is necessary **ROOT6**. 
 The class contains:
