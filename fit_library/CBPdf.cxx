@@ -38,7 +38,7 @@ ClassImp(CBPdf);
    A("A",this,other.A),
    B("B",this,other.B),
    C("C",this,other.C),
-   D("D",this,other.D),
+   D("D",this,other.D)
  {
  }
 
@@ -50,8 +50,9 @@ ClassImp(CBPdf);
     }
 
     Double_t absAlpha = TMath::Abs(C);
-    if (t >= -absAlpha):
-        return TMath.Exp(-0.5 * t * t)
+    if (t >= -absAlpha){
+        return TMath::Exp(-0.5 * t * t);
+    }
 
     if (t < -absAlpha){
         Double_t a =  TMath::Power(D / absAlpha, D) * TMath::Exp(-0.5 * absAlpha * absAlpha);
