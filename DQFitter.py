@@ -152,12 +152,11 @@ class DQFitter:
         # Print the chiSquare value
         nPars = rooFitRes.floatParsFinal().getSize()
         nBins = fRooPlot.GetXaxis().FindBin(fitRangeMax) - fRooPlot.GetXaxis().FindBin(fitRangeMin)
-        paveText.AddText("#bf{#chi^{2} = %3.2f}" % (fRooPlot.chiSquare()))
         paveText.AddText("n Par = %3.2f" % (nPars))
         paveText.AddText("n Bins = %3.2f" % (nBins))
-        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()/(nBins - nPars)))
+        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare(nPars)))
         fRooPlot.addObject(paveText)
-        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare()/(nBins - nPars)))
+        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)))
 
         # Fit plot
         canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 800, 600)
