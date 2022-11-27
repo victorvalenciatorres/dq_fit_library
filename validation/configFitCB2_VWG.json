@@ -1,6 +1,6 @@
 {
   "input": {
-    "input_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/dimuon_LHC2017.root",
+    "input_file_name": "/Users/valencia/Desktop/dq_fit_library/validation/dimuon_LHC2017.root",
     "input_name": "hInvMassPt46",
     "pdf_dictionary": {
       "pdf": ["CB2", "CB2", "VWG", "SUM"],
@@ -49,6 +49,6 @@
   },
   "output": {
     
-    "output_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/output/LHC17_CB2_VWG_"
+    "output_file_name": "/Users/valencia/Desktop/dq_fit_library/validation/output/LHC17_CB2_VWG_"
   }
 }
