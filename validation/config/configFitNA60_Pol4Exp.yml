@@ -1,7 +1,7 @@
 {
     "input": {
       "input_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/dimuon_LHC2017.root",
-      "input_name": "hInvMassPt812",
+      "input_name": "hInvMassPt02",
       "pdf_dictionary": {
         "pdf": ["NA60", "NA60", "Pol4Exp", "SUM"],
         "pdfName": ["Jpsi", "Psi2s", "Bkg", "SUM"],
@@ -49,6 +49,6 @@
     },
     "output": {
       
-      "output_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/output/NA60+Pol4Exp/"
+      "output_file_name": "/Users/valencia/Desktop/dq_fit_library/validation/output/"
     }
   }
