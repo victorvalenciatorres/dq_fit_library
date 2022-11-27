@@ -1,0 +1,54 @@
+{
+    "input": {
+      "input_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/dimuon_LHC2017.root",
+      "input_name": "hInvMassPt812",
+      "pdf_dictionary": {
+        "pdf": ["NA60", "NA60", "Pol4Exp", "SUM"],
+        "pdfName": ["Jpsi", "Psi2s", "Bkg", "SUM"],
+        "pdfColor": [861, 417, 1],
+        "pdfNameForLegend": ["J/#psi", "Background", "Fit"],
+        "pdfStyle": [1, 1, 2],
+        "parVal": [
+          [3.096, 1.2e-01, -0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [3.68, 1.5e-01, -0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [1, 1, 1, 1, 1, 1],
+          [1000, 100, 100000]
+        ],
+        "parLimMin": [
+          [3.096, 7.0e-02,  -0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [3.68, 7.0e-02, -0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [-100, -100, -100, -100, -100, -100],
+          [0, 0, 0]
+        ],
+        "parLimMax": [
+          [3.096, 1.9e-01,-0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [3.68, 1.9e-01, -0.8303, 0.0028, 0.4401, 0.2234, 2.083, 0.184, 1.295,  0.065],
+          [100, 100, 100, 100, 100, 100],
+          [50000, 5000, 500000]
+        ],
+        "parName": [
+          ["mean_Jpsi", "width_Jpsi", "alphaL_Jpsi", "p1L_Jpsi", "p2L_Jpsi", "p3L_Jpsi", "alphaR_Jpsi", "p1R_Jpsi", "p2R_Jpsi", "p3R_Jpsi"],
+          ["mean_Psi2s", "width_Psi2s", "alphaL_Psi2s", "p1L_Psi2s", "p2L_Psi2s", "p3L_Psi2s", "alphaR_Psi2s", "p1R_Psi2s", "p2R_Psi2s", "p3R_Psi2s"],
+          ["aa", "bb", "cc","dd", "ee", "ff"],
+          ["sig_Jpsi", "sig_Psi2s", "bkg"]
+        ],
+        "fitRangeMin": [2, 2.1, 2.2],
+        "fitRangeMax": [5, 4.9, 4.8],
+        "fitMethod": "likelyhood",
+        "doResidualPlot": true,
+        "doPullPlot": true, 
+        "doCorrMatPlot": true,
+        "doAlicePlot": true,
+        "parForAlicePlot": ["mean_Jpsi", "width_Jpsi", "sig_Jpsi"],
+        "parNameForAlicePlot": ["#mu_{J/#psi}", "#sigma_{J/#psi}", "#it{N}_{J/#psi}"],
+        "text": [
+          [0.20, 0.87, "LHC17 NA60+Pol4Exp, #sqrt{#it{s}} = 5.02 TeV"], 
+          [0.20, 0.80, "2.5 < #it{y} < 4, J/#psi #rightarrow #mu^{+}#mu^{-}"]
+        ]
+      }
+    },
+    "output": {
+      
+      "output_file_name": "/Users/valencia/Desktop/dq_fit_library-main/validation/output/NA60+Pol4Exp/"
+    }
+  }
