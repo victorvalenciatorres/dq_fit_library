@@ -68,22 +68,20 @@ ClassImp(NA60Pdf);
     }
 
     Double_t t0;
-    Double_t absalphaleft = TMath::Abs(alphaleft);
-    Double_t absalpharight = TMath::Abs(alpharight);
     
-    if (t > absalpharight){
-        double exp = (p2right-p3right * pow(t-absalpharight,0.5));
-        t0 = 1 + p1right *pow(t-absalpharight, exp);
+    if (t > alpharight){
+        double exp = (p2right-p3right * pow(t-alpharight,0.5));
+        t0 = 1 + p1right *pow(t-alpharight, exp);
         return TMath::Exp(-0.5 * pow(t / t0,2) );
     }
     
-    if (t < absalphaleft){
-        double exp = (p2left-p3left * pow(absalphaleft-t,0.5));
-        t0 = 1 + p1left *pow(absalphaleft-t, exp);
+    if (t < alphaleft){
+        double exp = (p2left-p3left * pow(alphaleft-t,0.5));
+        t0 = 1 + p1left *pow(alphaleft-t, exp);
         return TMath::Exp(-0.5 * pow((t/t0),2) );
     }
     
-   if (absalphaleft < t  and t < absalpharight){
+   if (alphaleft < t  and t < alpharight){
 
         t0 = 1;
          return TMath::Exp(-0.5 * pow((t /t0),2) );
