@@ -84,7 +84,10 @@ def main():
     print(args)
     print('Loading task configuration: ...', end='\r')
 
-
+    #fIn = TFile.Open(inputCfg["input"]["input_file_name"])
+    #hlist = fIn.Get("analysis-same-event-pairing/output")
+    #list = hlist.FindObject("PairsMuonSEPM_muonQualityCuts")
+    #histMass = list.FindObject("Mass")
 
     with open(args.cfgFileName, 'r') as jsonCfgFile:
         #inputCfg = json.load(jsonCfgFile)
