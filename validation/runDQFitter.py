@@ -8,9 +8,9 @@ from os import path
 import ROOT
 from ROOT import TFile, TF1, TH1F, TTree
 from ROOT import gRandom
-sys.path.append('/Users/valencia/Desktop/dq_fit_library')
+sys.path.append('../')
 from DQFitter import DQFitter
-sys.path.append('/Users/valencia/Desktop/dq_fit_library/utils')
+sys.path.append('../utils')
 from utils_library import DoSystematics
 
 def GenerateTutorialSample():
