@@ -1,7 +1,7 @@
 {
     "input": {
-      "input_file_name": "/Users/lucamicheletti/GITHUB/dq_analysis_utils/macro/output/Data/LHC22m_apass1_bis_muons.root",
-      "input_name": ["Mass_PairsMuonSEPM_muonQualityCuts", "PairsMuonSEPM_muonQualityCuts_Mass_Pt_Proj_0_Pt_2", "PairsMuonSEPM_muonQualityCuts_Mass_Pt_Proj_2_Pt_6", "PairsMuonSEPM_muonQualityCuts_Mass_Pt_Proj_6_Pt_20"],
+      "input_file_name": "/Users/lucamicheletti/GITHUB/dq_analysis_utils/macro/output/Data/LHC22m_apass2_muons.root",
+      "input_name": ["Mass_PairsMuonSEPM_muonLowPt", "PairsMuonSEPM_muonLowPt_Mass_Pt_Proj_0_Pt_2", "PairsMuonSEPM_muonLowPt_Mass_Pt_Proj_2_Pt_6", "PairsMuonSEPM_muonLowPt_Mass_Pt_Proj_6_Pt_20"],
       "pdf_dictionary": {
         "pdf": ["CB2", "VWG", "SUM"],
         "pdfName": ["Jpsi", "Bkg", "SUM"],
@@ -44,6 +44,6 @@
       }
     },
     "output": {
-      "output_path": "output/LHC22m_CB2_VWG/"
+      "output_path": "output/LHC22m_apass2_CB2_VWG/"
     }
   }
