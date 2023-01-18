@@ -14,13 +14,13 @@ class DQFitter:
         self.fInput            = 0
         self.fRooWorkspace     = RooWorkspace('w','workspace')
         self.fParNames         = []
-        self.fFitMethod        = "likelyhood"
+        self.fFitMethod        = "chi2"
         self.fFitRangeMin      = []
         self.fFitRangeMax      = []
         self.fTrialName        = ""
         self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5)
-        self.fDoResidualPlot   = False
-        self.fDoPullPlot       = False
+        self.fDoResidualPlot   = True
+        self.fDoPullPlot       = True
         self.fDoCorrMatPlot    = False
 
     def SetFitConfig(self, pdfDict):
@@ -48,6 +48,7 @@ class DQFitter:
             parLimMin = self.fPdfDict["parLimMin"][i]
             parLimMax = self.fPdfDict["parLimMax"][i]
             parName = self.fPdfDict["parName"][i]
+            parFix = self.fPdfDict["parFix"][i]
 
             if not self.fPdfDict["pdf"][i] == "SUM":
                 # Filling parameter list
@@ -58,15 +59,20 @@ class DQFitter:
                         r1 = parName[j].find("::") + 2
                         r2 = parName[j].find("(", r1)
                         parName[j] = parName[j][r1:r2]
+                        if (parFix[j] == True):
+                            self.fRooWorkspace.factory("{}[{}]".format(parName[j], parVal[j]))
                     else:
-                        self.fRooWorkspace.factory("{}[{},{},{}]".format(parName[j], parVal[j], parLimMin[j], parLimMax[j]))
+                        if (parFix[j] == True):
+                            self.fRooWorkspace.factory("{}[{}]".format(parName[j], parVal[j]))
+                        else:
+                            self.fRooWorkspace.factory("{}[{},{},{}]".format(parName[j], parVal[j], parLimMin[j], parLimMax[j]))
+
                         self.fParNames.append(parName[j]) # only free parameters will be reported in the histogram of results
 
                 # Define the pdf associating the parametes previously defined
                 nameFunc = self.fPdfDict["pdf"][i]
                 nameFunc += "Pdf::{}Pdf(m[2,5]".format(self.fPdfDict["pdfName"][i])
                 pdfList.append(self.fPdfDict["pdfName"][i])
-
                 for j in range(0, len(parVal)):
                     nameFunc += ",{}".format(parName[j])
                 nameFunc += ")"
@@ -74,14 +80,12 @@ class DQFitter:
             else:
                 nameFunc = self.fPdfDict["pdf"][i]
                 nameFunc += "::sum("
-
                 for j in range(0, len(pdfList)):
                     nameFunc += "{}[{},{},{}]*{}Pdf".format(parName[j], parVal[j], parLimMin[j], parLimMax[j], pdfList[j])
                     self.fParNames.append(parName[j])
                     if not j == len(pdfList) - 1:
                         nameFunc += ","
                 nameFunc += ")"
-                print(nameFunc)
                 self.fRooWorkspace.factory(nameFunc)
 
         self.fRooWorkspace.Print()
@@ -107,7 +111,7 @@ class DQFitter:
         # Select the fit method
         if fitMethod == "likelyhood":
             print("########### Perform likelyhood fit ###########")
-            rooFitRes = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Extended(ROOT.kTRUE), ROOT.RooFit.Save()))
+            rooFitRes = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Range(2,5),ROOT.RooFit.PrintLevel(-1), ROOT.RooFit.Save()))
         if fitMethod == "chi2":
             print("########### Perform X2 fit ###########")
             rooFitRes = ROOT.RooFitResult(pdf.chi2FitTo(rooDs, ROOT.RooFit.Save()))
@@ -120,12 +124,10 @@ class DQFitter:
             histResults.SetBinError(index, self.fRooWorkspace.var(parName).getError())
             index += 1
 
-        # Print the fit result
-        rooFitRes.Print()
-
-        rooDs.plotOn(fRooPlot, ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.6))
+      
+        rooDs.plotOn(fRooPlot, ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.6), ROOT.RooFit.Range(fitRangeMin, fitRangeMax))
         pdf.plotOn(fRooPlot, ROOT.RooFit.VisualizeError(rooFitRes, 1), ROOT.RooFit.FillColor(ROOT.kRed-10), ROOT.RooFit.Range(fitRangeMin, fitRangeMax))
-        rooDs.plotOn(fRooPlot, ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.6))
+        rooDs.plotOn(fRooPlot, ROOT.RooFit.MarkerStyle(20), ROOT.RooFit.MarkerSize(0.6), ROOT.RooFit.Range(fitRangeMin, fitRangeMax))
         pdf.plotOn(fRooPlot, ROOT.RooFit.LineColor(ROOT.kRed+1), ROOT.RooFit.LineWidth(2), ROOT.RooFit.Range(fitRangeMin, fitRangeMax))
         for i in range(0, len(self.fPdfDict["pdf"])):
             if not self.fPdfDict["pdfName"][i] == "SUM":
@@ -149,14 +151,20 @@ class DQFitter:
                 if self.fPdfDict["pdfName"][i] in parName:
                     (paveText.GetListOfLines().Last()).SetTextColor(self.fPdfDict["pdfColor"][i])
 
+        
+        n = self.fRooWorkspace.var("sig_Jpsi").getVal()
+
         # Print the chiSquare value
         nPars = rooFitRes.floatParsFinal().getSize()
         nBins = fRooPlot.GetXaxis().FindBin(fitRangeMax) - fRooPlot.GetXaxis().FindBin(fitRangeMin)
+        print("parameters: ",nPars," nBins: ",nBins)
         paveText.AddText("n Par = %3.2f" % (nPars))
         paveText.AddText("n Bins = %3.2f" % (nBins))
-        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare(nPars)))
+        #paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()/(nBins - nPars)))
+        paveText.AddText("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)))
         fRooPlot.addObject(paveText)
-        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)))
+        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)-100))
+        #extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare()/(nBins - nPars)))
         # Fit plot
         canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 800, 600)
         canvasFit.SetLeftMargin(0.15)
@@ -164,6 +172,12 @@ class DQFitter:
         fRooPlot.GetYaxis().SetTitleOffset(1.4)
         fRooPlot.Draw()
 
+
+  # Create the chi2
+        chi2 = pdf.createChi2(rooDs,ROOT.RooFit.Extended(ROOT.kTRUE))
+        # Print the fit result
+        rooFitRes.Print()
+        
         # Official fit plot
         if self.fPdfDict["doAlicePlot"]:
             DoAlicePlot(rooDs, pdf, fRooPlotOff, self.fPdfDict, self.fInputName, trialName, self.fOutPath, extraText)
@@ -194,6 +208,7 @@ class DQFitter:
         '''
         Method to perform a multi-trial fit
         '''
-        for iRange in range(0, len(self.fFitRangeMin)):
-            self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
+        self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[0], self.fFitRangeMax[0])
+        #for iRange in range(0, len(self.fFitRangeMin)):
+        #    self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
         self.fFileOut.Close()
