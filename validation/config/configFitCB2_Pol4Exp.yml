@@ -1,13 +1,19 @@
 {
     "input": {
       "input_file_name": "dimuon_LHC2017.root",
-      "input_name": "hInvMassPt02",
+      "input_name": "hInvMassPt612",
       "pdf_dictionary": {
         "pdf": ["CB2", "CB2", "Pol4Exp", "SUM"],
         "pdfName": ["Jpsi", "Psi2s", "polexp", "SUM"],
         "pdfColor": [861, 417, 1],
         "pdfNameForLegend": ["J/#psi", "Background", "Fit"],
         "pdfStyle": [1, 1, 2],
+        "parFix": [
+        [False, False, True, True, True, True],
+        [False, False, True, True, True, True],
+        [False, False, False, False, False, False],
+        [False, False, False]
+      ],
         "parVal": [
           [3.096, 1.2e-01, 1.089, 3.393, 2.097, 8.694],
           [3.68, 1.5e-01, 1.089, 3.393, 2.097, 8.694],
@@ -17,13 +23,13 @@
         "parLimMin": [
           [2.9, 7.0e-02, 1.0889, 3.3929, 2.096, 8.693],
           [3.2, 7.0e-02, 1.0889, 3.3929, 2.096, 8.693],
-          [-10, -10, -10, -10, -10, -10],
+          [-100, -100, -100, -100, -100, -100],
           [0, 0, 0]
         ],
         "parLimMax": [
           [3.5, 1.9e-01, 1.0891, 3.3931, 2.098, 8.695],
           [3.9, 1.9e-01, 1.0891, 3.3931, 2.098, 8.695],
-          [10, 10, 10, 10, 10, 10],
+          [100, 100, 100, 100, 100, 100],
           [50000, 5000, 500000]
         ],
         "parName": [

@@ -1,15 +1,8 @@
 utils/__pycache__
 __pycache__/
-
 .DS_Store
-validation/output/.DS_Store
-
 *.root
-
 *.d
-
 *.so
-
 *.pcm
-
 *.pdf

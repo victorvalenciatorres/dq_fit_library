@@ -14,7 +14,7 @@ class DQFitter:
         self.fInput            = 0
         self.fRooWorkspace     = RooWorkspace('w','workspace')
         self.fParNames         = []
-        self.fFitMethod        = "chi2"
+        self.fFitMethod        = "likelyhood"
         self.fFitRangeMin      = []
         self.fFitRangeMax      = []
         self.fTrialName        = ""
@@ -29,6 +29,7 @@ class DQFitter:
         '''
         self.fPdfDict = pdfDict
         self.fInput = self.fFileIn.Get(self.fInputName)
+        self.fInput.Sumw2()
         self.fFitMethod = pdfDict["fitMethod"]
         self.fFitRangeMin = pdfDict["fitRangeMin"]
         self.fFitRangeMax = pdfDict["fitRangeMax"]
@@ -71,7 +72,7 @@ class DQFitter:
 
                 # Define the pdf associating the parametes previously defined
                 nameFunc = self.fPdfDict["pdf"][i]
-                nameFunc += "Pdf::{}Pdf(m[2,5]".format(self.fPdfDict["pdfName"][i])
+                nameFunc += "Pdf::{}Pdf(m[{},{}]".format(self.fPdfDict["pdfName"][i],2,5)
                 pdfList.append(self.fPdfDict["pdfName"][i])
                 for j in range(0, len(parVal)):
                     nameFunc += ",{}".format(parName[j])
@@ -88,8 +89,6 @@ class DQFitter:
                 nameFunc += ")"
                 self.fRooWorkspace.factory(nameFunc)
 
-        self.fRooWorkspace.Print()
-
     def FitInvMassSpectrum(self, fitMethod, fitRangeMin, fitRangeMax):
         '''
         Method to perform the fit to the invariant mass spectrum
@@ -99,11 +98,13 @@ class DQFitter:
         self.fRooWorkspace.Print()
         pdf = self.fRooWorkspace.pdf("sum")
         self.fRooMass.setRange("range", fitRangeMin, fitRangeMax)
-        fRooPlot = self.fRooMass.frame(ROOT.RooFit.Title(trialName))
+        fRooPlot = self.fRooMass.frame(ROOT.RooFit.Title(trialName), ROOT.RooFit.Range("range"))
+
         fRooPlotOff = self.fRooMass.frame(ROOT.RooFit.Title(trialName))
         if "TTree" in self.fInput.ClassName():
             print("########### Perform unbinned fit ###########")
             rooDs = RooDataSet("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
+            
         else:
             print("########### Perform binned fit ###########")
             rooDs = RooDataHist("data", "data", RooArgSet(self.fRooMass), ROOT.RooFit.Import(self.fInput))
@@ -111,7 +112,7 @@ class DQFitter:
         # Select the fit method
         if fitMethod == "likelyhood":
             print("########### Perform likelyhood fit ###########")
-            rooFitRes = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Range(2,5),ROOT.RooFit.PrintLevel(-1), ROOT.RooFit.Save()))
+            rooFitRes = ROOT.RooFitResult(pdf.fitTo(rooDs, ROOT.RooFit.Range(fitRangeMin,fitRangeMax),ROOT.RooFit.PrintLevel(-1), ROOT.RooFit.Save()))
         if fitMethod == "chi2":
             print("########### Perform X2 fit ###########")
             rooFitRes = ROOT.RooFitResult(pdf.chi2FitTo(rooDs, ROOT.RooFit.Save()))
@@ -151,30 +152,40 @@ class DQFitter:
                 if self.fPdfDict["pdfName"][i] in parName:
                     (paveText.GetListOfLines().Last()).SetTextColor(self.fPdfDict["pdfColor"][i])
 
-        
-        n = self.fRooWorkspace.var("sig_Jpsi").getVal()
 
-        # Print the chiSquare value
+
+        #Fit with RooChi2Var
+        # To Do : Find a way to get the number of bins differently. The following is a temparary solution.
+        # WARNING : The largest fit range has to come first in the config file otherwise it does not work
+        nbinsperGev = rooDs.numEntries() / (self.fPdfDict["fitRangeMax"][0] - self.fPdfDict["fitRangeMin"][0])
+        #nBins = fRooPlot.GetXaxis().FindBin(fitRangeMax) - fRooPlot.GetXaxis().FindBin(fitRangeMin)
+        nBins = (fitRangeMax - fitRangeMin)*nbinsperGev
+       
+        chi2 = ROOT.RooChi2Var("chi2", "chi2", pdf, rooDs)
         nPars = rooFitRes.floatParsFinal().getSize()
-        nBins = fRooPlot.GetXaxis().FindBin(fitRangeMax) - fRooPlot.GetXaxis().FindBin(fitRangeMin)
-        print("parameters: ",nPars," nBins: ",nBins)
-        paveText.AddText("n Par = %3.2f" % (nPars))
+        ndof = nBins - nPars
+        reduced_chi2 = chi2.getVal() / ndof
+        
+
+       
+        # Add the chiSquare value
+        paveText.AddText("n Par = %3.2f" % (nPars)) 
         paveText.AddText("n Bins = %3.2f" % (nBins))
-        #paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % (fRooPlot.chiSquare()/(nBins - nPars)))
-        paveText.AddText("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)))
+        paveText.AddText("#bf{#chi^{2}/dof = %3.2f}" % reduced_chi2)
+      
         fRooPlot.addObject(paveText)
-        extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare(nPars)-100))
-        #extraText.append("#chi^{2}/dof = %3.2f" % (fRooPlot.chiSquare()/(nBins - nPars)))
+        extraText.append("#chi^{2}/dof = %3.2f" % reduced_chi2)
+     
+
+
         # Fit plot
         canvasFit = TCanvas("fit_plot_{}".format(trialName), "fit_plot_{}".format(trialName), 800, 600)
         canvasFit.SetLeftMargin(0.15)
         gPad.SetLeftMargin(0.15)
         fRooPlot.GetYaxis().SetTitleOffset(1.4)
         fRooPlot.Draw()
-
-
-  # Create the chi2
-        chi2 = pdf.createChi2(rooDs,ROOT.RooFit.Extended(ROOT.kTRUE))
+        #fRooPlot.Print("V")
+        
         # Print the fit result
         rooFitRes.Print()
         
@@ -208,7 +219,6 @@ class DQFitter:
         '''
         Method to perform a multi-trial fit
         '''
-        self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[0], self.fFitRangeMax[0])
-        #for iRange in range(0, len(self.fFitRangeMin)):
-        #    self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
+        for iRange in range(0, len(self.fFitRangeMin)):
+            self.FitInvMassSpectrum(self.fFitMethod, self.fFitRangeMin[iRange], self.fFitRangeMax[iRange])
         self.fFileOut.Close()
