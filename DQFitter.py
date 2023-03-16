@@ -18,7 +18,7 @@ class DQFitter:
         self.fFitRangeMin      = []
         self.fFitRangeMax      = []
         self.fTrialName        = ""
-        self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 2, 5)
+        self.fRooMass          = RooRealVar("m", "#it{M} (GeV/#it{c}^{2})", 7, 12)
         self.fDoResidualPlot   = True
         self.fDoPullPlot       = True
         self.fDoCorrMatPlot    = False
@@ -72,7 +72,7 @@ class DQFitter:
 
                 # Define the pdf associating the parametes previously defined
                 nameFunc = self.fPdfDict["pdf"][i]
-                nameFunc += "Pdf::{}Pdf(m[{},{}]".format(self.fPdfDict["pdfName"][i],2,5)
+                nameFunc += "Pdf::{}Pdf(m[{},{}]".format(self.fPdfDict["pdfName"][i],self.fPdfDict["fitRangeMin"][0],self.fPdfDict["fitRangeMax"][0])
                 pdfList.append(self.fPdfDict["pdfName"][i])
                 for j in range(0, len(parVal)):
                     nameFunc += ",{}".format(parName[j])
